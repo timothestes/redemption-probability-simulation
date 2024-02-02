@@ -1,7 +1,11 @@
 # Redemption Probability Simulation
 
 ## Overview
-This project is designed to perform "Monte Carlo" simulations for the Redemption card game. It enables users to configure various simulation parameters, such as the number of simulations to run, deck sizes to consider, and specific card inclusions like the hopper lost soul. The project supports generating plots of the simulation results, providing visual insights into the outcomes of different configurations.
+This project is a "Monte Carlo" experiment for the Redemption card game that enables insights about the probabilities of a given event will happen. 
+
+In this first draft, I wanted to see how probable it was to get Matthew into play on turn one. Users can tweak various simulation parameters, such as the number of simulations to run, deck sizes to consider, and specific card inclusions like the hopper lost soul. 
+
+The project supports generating plots of the simulation results, providing visual insights into the outcomes of different configurations.
 
 ## Features
 - Simulation of Redemption card game scenarios.
