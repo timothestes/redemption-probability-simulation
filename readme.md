@@ -1,13 +1,16 @@
 # Redemption Probability Simulation
 
 ## Overview
-The Redemption Probability Simulation project is designed to simulate card game scenarios, specifically focusing on the Redemption card game. It enables users to configure various simulation parameters, such as the number of simulations to run, deck sizes to consider, and specific card inclusions like the hopper. The project supports generating plots of the simulation results, providing visual insights into the outcomes of different configurations.
+This project is designed to perform "Monte Carlo" simulations for the Redemption card game. It enables users to configure various simulation parameters, such as the number of simulations to run, deck sizes to consider, and specific card inclusions like the hopper lost soul. The project supports generating plots of the simulation results, providing visual insights into the outcomes of different configurations.
 
 ## Features
 - Simulation of Redemption card game scenarios.
 - Customizable simulation parameters through command-line arguments.
 - Support for generating and saving heatmap plots of the simulation outcomes.
 - Configurable deck compositions with options for including specific cards.
+
+## Planned
+- More complex interactions (Territory class enhancements, Cards that draw other cards like Denarius)
 
 ## Installation
 1. Clone this repository to your local machine.
