@@ -52,6 +52,9 @@ python3 -m src.main \
 ## Plotting Results
 If the `--generate_plot` flag is included, the script will generate a heatmap visualizing the percentage of games with the desired outcome based on the simulation parameters. The plot will be saved in the `tmp/` directory.
 
+Here's an example heat map (not going first, no hopper, 50 card deck, and 50,0000 simulations):
+![Example Heat Map](assets/simulation_goingfirst-False_hopper-False_decksize-50_numsims-50000.png "Example Heat Map")
+
 ## Contributing
 Contributions to the Redemption Probability Simulation project are welcome! Please create your branch and make a pull request.
 
