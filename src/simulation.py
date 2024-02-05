@@ -16,12 +16,7 @@ from src.utils import determine_lost_souls_required
 
 
 class Simulation:
-    """Class contains all info nessecary to run a simulation."""
-
-    deck: Deck = None
-    territory: Territory = None
-    hand: Hand = None
-    discard: Discard = None
+    """Class contains all information necessary to run a simulation."""
 
     def __init__(
         self,
@@ -45,51 +40,43 @@ class Simulation:
         self.hopper = hopper
         self.virgin_birth = virgin_birth
         self.souls_in_deck = determine_lost_souls_required(deck_size)
+        self.initial_decklist = self.generate_decklist()
+        self.deck = Deck(deque(self.initial_decklist))
+        self.territory = Territory(cards=[])
+        self.discard = Discard(cards=[])
+        self.hand = Hand(cards=[])
 
-    def generate_decklist(
-        self,
-        deck_size: int = 50,
-        n_tutors: int = 0,
-        n_cycler_souls: int = 0,
-    ) -> deque[Card]:
-        """Generate a deck based upon certain parameters."""
+    def generate_decklist(self) -> deque[Card]:
+        """Generate a deck based on certain parameters."""
         deck_of_cards = deque()
 
-        # Add the macguffin to the deck
+        # Initialize deck with specified cards
         deck_of_cards.append(Card("macguffin"))
-
-        # Add tutors to the deck
-        for _ in range(n_tutors):
-            deck_of_cards.append(Card("tutor"))
-
-        # Add cycler lost souls to the deck
-        for _ in range(n_cycler_souls):
-            deck_of_cards.append(Card("lost_soul", subtype="cycler"))
-
-        # Add remaining lost souls to the deck
-        for _ in range(self.souls_in_deck - n_cycler_souls):
-            deck_of_cards.append(Card("lost_soul", subtype="meek"))
-
-        # Add hopper if included
+        deck_of_cards.extend([Card("tutor") for _ in range(self.n_tutors)])
+        deck_of_cards.extend(
+            [Card("lost_soul", subtype="cycler") for _ in range(self.n_cycler_souls)]
+        )
+        deck_of_cards.extend(
+            [
+                Card("lost_soul", subtype="meek")
+                for _ in range(self.souls_in_deck - self.n_cycler_souls)
+            ]
+        )
         if self.hopper:
             deck_of_cards.append(Card("lost_soul", subtype="hopper"))
-
         if self.virgin_birth:
             deck_of_cards.append(Card("non_lost_soul", subtype="virgin_birth"))
-
-        # Add non-lost_souls to the deck (not including macguffin, tutors, virginbirth, and hopper)
-        n_non_lost_souls = (
-            deck_size
-            - self.souls_in_deck
-            - n_tutors
-            - int(self.hopper)
-            - int(self.virgin_birth)
-            - 1
-        )
-        for _ in range(n_non_lost_souls):
-            deck_of_cards.append(Card("non_lost_soul"))
+        n_non_lost_souls = self.deck_size - len(deck_of_cards)
+        deck_of_cards.extend([Card("non_lost_soul") for _ in range(n_non_lost_souls)])
 
         return deck_of_cards
+
+    def reset_simulation_state(self):
+        """Reset the state of the simulation for a new run."""
+        self.deck.reset(shuffle=True)
+        self.territory.reset()
+        self.discard.reset()
+        self.hand.reset()
 
     def _take_a_turn(
         self,
@@ -173,36 +160,24 @@ class Simulation:
             writer.writeheader()
 
     @staticmethod
-    def print_file_size(filename: str) -> None:
-        """Print the size of a file in bytes"""
+    def print_file_size(filename: str):
+        """Print the size of a file in bytes."""
         size = os.path.getsize(filename)
-        size_kb = size / 1024  # size in kilobytes
-        print(f"The size of '{filename}' is {size_kb} kilobytes")
+        size_kb = size / 1024  # Convert to kilobytes
+        print(f"The size of '{filename}' is {size_kb:.2f} kilobytes")
 
     @staticmethod
-    def append_log_to_file(dict_to_add: list[dict], csv_file: str) -> None:
-        """Add a row of log data to the csv file"""
+    def append_log_to_file(log_data: list[dict], csv_file: str):
+        """Bulk add rows of log data to the CSV file."""
         with open(csv_file, "a", newline="", encoding="utf-8") as f:
-            writer = csv.DictWriter(f, fieldnames=dict_to_add[0].keys())
-            writer.writerows([row for row in dict_to_add])
+            writer = csv.DictWriter(f, fieldnames=log_data[0].keys())
+            writer.writerows(log_data)
 
-    def simulate_game(self) -> None:
-        """Simulate a game of Redemption and record it in a log file!"""
-        # Create the deck of cards
-        decklist = self.generate_decklist(
-            deck_size=self.deck_size,
-            n_cycler_souls=self.n_cycler_souls,
-            n_tutors=self.n_tutors,
-        )
+    def simulate_game(self):
+        """Simulate a game of Redemption and record it in a log file."""
+        all_logs = []  # Collect all logs to write in bulk
         for sim_number in range(self.n_simulations):
-            # Create a deck object based on the list of cards we created
-            self.deck = Deck(deque(decklist.copy()))
-            self.deck.shuffle()
-
-            # create empty zones
-            self.territory = Territory(cards=[])
-            self.discard = Discard(cards=[])
-            self.hand = Hand(cards=[])
+            self.reset_simulation_state()  # Reset deck, hand, discard, and territory
 
             # draw 8 cards from deck
             self.hand.add(self.deck.draw_n(8))
@@ -218,5 +193,8 @@ class Simulation:
                 # save the turn log to the current log file
                 log_file.append(turn_log)
 
-            # After all simulations are done, append to the file
-            self.append_log_to_file(log_file, "game_log.csv")
+            # Collect logs instead of writing them immediately
+            all_logs.extend(log_file)
+
+        # Bulk write logs at the end of all simulations
+        self.append_log_to_file(all_logs, "game_log.csv")

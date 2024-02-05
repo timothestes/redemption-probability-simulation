@@ -15,15 +15,12 @@ from src.visualization import plot_simulation_results
 
 
 def parse_args():
-    """Function used to parse CLI args."""
+    """Parse command-line arguments."""
     parser = argparse.ArgumentParser(
         description="Run a simulation of the Redemption card game."
     )
     parser.add_argument(
-        "--n_simulations",
-        type=int,
-        default=5000,
-        help="Number of simulations to run.",
+        "--n_simulations", type=int, default=5000, help="Number of simulations to run."
     )
     parser.add_argument(
         "--n_tutors_to_try",
@@ -47,10 +44,7 @@ def parse_args():
         help="Deck sizes to try in simulations.",
     )
     parser.add_argument(
-        "--n_turns",
-        type=int,
-        default=1,
-        help="Number of turns per simulation.",
+        "--n_turns", type=int, default=1, help="Number of turns per simulation."
     )
     parser.add_argument(
         "--going_first",
@@ -78,8 +72,9 @@ def parse_args():
 if __name__ == "__main__":
     args = parse_args()
 
-    # Use args to access command-line arguments
+    # Initialize log file before running simulations
     Simulation.create_empty_log_file()
+
     for deck_size in args.deck_sizes_to_try:
         for n_tutors in args.n_tutors_to_try:
             for n_cycler_souls in args.n_cycler_souls_to_try:
@@ -95,13 +90,17 @@ if __name__ == "__main__":
                     virgin_birth=args.virgin_birth,
                 )
                 simulation.simulate_game()
-                simulation.print_file_size("game_log.csv")
 
+    # Print file size after all simulations are complete
+    simulation.print_file_size("game_log.csv")
+
+    # Generate plot if required
     if args.generate_plot:
+        # Adjust parameters as needed to reflect overall simulations
         plot_simulation_results(
             num_simulations=args.n_simulations,
             going_first=args.going_first,
             hopper=args.hopper,
-            deck_size=deck_size,
+            deck_size=deck_size,  # Note: This will use the last deck_size from the loop.
             virgin_birth=args.virgin_birth,
         )

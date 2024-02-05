@@ -27,10 +27,24 @@ class Card:
 
 class Zone:
     def __init__(self, cards: Optional[deque[Card]] = None):
+        # Store the original state
+        self.original_cards = cards.copy() if cards else None
         self.cards = cards or deque()
+        self._initialize_card_types()
+
+    def _initialize_card_types(self):
+        """Initialize or reset the count of card types."""
         self._card_types = {card_type: 0 for card_type in CARD_TYPES}
         for card in self.cards:
             self._card_types[card.card_type] += 1
+
+    def reset(self):
+        """Reset the zone to its original state, if an original state was provided."""
+        if self.original_cards is not None:
+            self.cards = self.original_cards.copy()
+        else:
+            self.cards.clear()
+        self._initialize_card_types()
 
     def add(self, cards):
         """Add a list or single card to a given zone."""
@@ -130,6 +144,12 @@ class Deck(Zone):
 
     def __init__(self, cards: Optional[deque[Card]] = None):
         super().__init__(cards if cards else deque())
+
+    def reset(self, shuffle=True):
+        """Extend the base reset to optionally shuffle the deck."""
+        super().reset()
+        if shuffle:
+            self.shuffle()
 
     def draw_n(self, number_of_cards_to_draw: int) -> deque[Card]:
         """Return the first n cards of the deck."""
