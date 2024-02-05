@@ -42,7 +42,8 @@ python3 -m src.main \
     --deck_sizes_to_try 50 \
     --n_cycler_souls_to_try 0 1 2 \
     --going_first \
-    --include_hopper \
+    --hopper \
+    --virgin_birth \
     --generate_plot
 ```
 
@@ -53,7 +54,8 @@ python3 -m src.main \
 - `--deck_sizes_to_try`: Space-separated list of deck sizes to try (not tested for multiple deck sizes yet).
 - `--n_turns`: Number of turns per simulation (default: 1, not tested for above one yet).
 - `--going_first`: Flag to simulate going first in the game (which means 3 cards will not be drawn at the start of the first turn).
-- `--include_hopper`: Flag to include the hopper card in the deck.
+- `--hopper`: Flag to include the hopper card in the deck.
+- `--virgin_birth`: Flag to include The Virgin Birth in the deck.
 - `--generate_plot`: Flag to generate a heatmap of the simulation's results.
 
 ## Plotting Results

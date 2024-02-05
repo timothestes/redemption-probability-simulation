@@ -58,9 +58,14 @@ def parse_args():
         help="Whether or not you are going first in the game.",
     )
     parser.add_argument(
-        "--include_hopper",
+        "--hopper",
         action="store_true",
         help="Whether or not to include hopper in the deck.",
+    )
+    parser.add_argument(
+        "--virgin_birth",
+        action="store_true",
+        help="Whether or not to include The Virgin Birth in the deck.",
     )
     parser.add_argument(
         "--generate_plot",
@@ -86,7 +91,8 @@ if __name__ == "__main__":
                     n_simulations=args.n_simulations,
                     n_turns=args.n_turns,
                     going_first=args.going_first,
-                    include_hopper=args.include_hopper,
+                    hopper=args.hopper,
+                    virgin_birth=args.virgin_birth,
                 )
                 simulation.simulate_game()
                 simulation.print_file_size("game_log.csv")
@@ -95,6 +101,7 @@ if __name__ == "__main__":
         plot_simulation_results(
             num_simulations=args.n_simulations,
             going_first=args.going_first,
-            has_hopper=args.include_hopper,
+            hopper=args.hopper,
             deck_size=deck_size,
+            virgin_birth=args.virgin_birth,
         )

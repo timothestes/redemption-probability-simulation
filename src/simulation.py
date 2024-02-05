@@ -32,7 +32,8 @@ class Simulation:
         n_simulations: int,
         n_turns: int,
         going_first: bool,
-        include_hopper: bool,
+        hopper: bool,
+        virgin_birth: bool,
     ):
         self.macguffin = macguffin
         self.deck_size = deck_size
@@ -41,7 +42,8 @@ class Simulation:
         self.n_simulations = n_simulations
         self.n_turns = n_turns
         self.going_first = going_first
-        self.include_hopper = include_hopper
+        self.hopper = hopper
+        self.virgin_birth = virgin_birth
         self.souls_in_deck = determine_lost_souls_required(deck_size)
 
     def generate_decklist(
@@ -69,12 +71,20 @@ class Simulation:
             deck_of_cards.append(Card("lost_soul", subtype="meek"))
 
         # Add hopper if included
-        if self.include_hopper:
+        if self.hopper:
             deck_of_cards.append(Card("lost_soul", subtype="hopper"))
 
-        # Add non-lost_souls to the deck (not including macguffin, tutors, and hopper)
+        if self.virgin_birth:
+            deck_of_cards.append(Card("non_lost_soul", subtype="virgin_birth"))
+
+        # Add non-lost_souls to the deck (not including macguffin, tutors, virginbirth, and hopper)
         n_non_lost_souls = (
-            deck_size - self.souls_in_deck - n_tutors - int(self.include_hopper) - 1
+            deck_size
+            - self.souls_in_deck
+            - n_tutors
+            - int(self.hopper)
+            - int(self.virgin_birth)
+            - 1
         )
         for _ in range(n_non_lost_souls):
             deck_of_cards.append(Card("non_lost_soul"))
@@ -90,6 +100,14 @@ class Simulation:
         # draw 3 cards for turn (except if on the play)
         if not (self.going_first and turn_number == 1):
             drawn_cards = self.deck.draw_n(3)
+            # resolve the virgin birth
+            if self.virgin_birth:
+                for i, card in enumerate(drawn_cards):
+                    if card.subtype == "virgin_birth":
+                        # replace virgin birth with a card from the top 6
+                        drawn_cards[i] = self.deck.resolve_the_virgin_birth(
+                            drawn_cards[i]
+                        )
             self.hand.add(drawn_cards)
 
         # handle lost souls that are in our hand
@@ -111,7 +129,7 @@ class Simulation:
         if self.hand.count("macguffin") > 0:
             self.territory.add(self.hand.remove("macguffin"))
         # if we don't have macguffin, try to tutor for it
-        if self.hand.count("tutor") > 0 and self.deck.count("macguffin") > 0:
+        elif self.hand.count("tutor") > 0 and self.deck.count("macguffin") > 0:
             self.territory.add(self.hand.remove("tutor"))
             macguffin_card = self.deck.search_for("macguffin")
             if macguffin_card:
@@ -130,7 +148,7 @@ class Simulation:
             "n_tutors_in_starting_deck": self.n_tutors,
             "deck_size": self.deck_size,
             "n_cycler_souls": self.n_cycler_souls,
-            "has_hopper": self.include_hopper,
+            "has_hopper": self.hopper,
         }
 
     @staticmethod
@@ -188,6 +206,9 @@ class Simulation:
 
             # draw 8 cards from deck
             self.hand.add(self.deck.draw_n(8))
+            # resolve virgin birth star ability
+            if virgin_birth := self.hand.search_for(subtype="virgin_birth"):
+                self.hand.add(self.deck.resolve_the_virgin_birth(virgin_birth))
 
             # Log file for the current game simulation
             log_file = []
