@@ -16,6 +16,10 @@ The project supports generating plots of the simulation results, providing visua
 ## Planned
 - More complex interactions (Territory class enhancements, Cards that draw other cards like Denarius)
 
+## Requirements
+
+A valid version of python3. 
+
 ## Installation
 1. Clone this repository to your local machine.
 
