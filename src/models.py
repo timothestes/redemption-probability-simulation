@@ -48,6 +48,9 @@ class Zone:
 
     def add(self, cards):
         """Add a list or single card to a given zone."""
+        if not cards:
+            # TODO: log this? This shouldn't be happening...
+            return
         if isinstance(cards, list) or isinstance(cards, deque):
             for card in cards:
                 self.append(card)

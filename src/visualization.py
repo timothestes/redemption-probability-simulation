@@ -18,17 +18,20 @@ def plot_simulation_results(
     hopper: bool,
     deck_size: int,
     virgin_birth: bool,
+    prosperity: bool,
 ):
     """Print the results of the simulation as a heatmap."""
     print("creating visualization")
     going_first_status = "True" if going_first else "False"
     hopper_included = "True" if hopper else "False"
+    prosperity_included = "True" if prosperity else "False"
     params = {
         "goingfirst": going_first_status,
         "hopper": hopper_included,
         "decksize": deck_size,
         "virgin_birth": virgin_birth,
         "numsims": num_simulations,
+        "prosperity": prosperity,
     }
 
     # Load the simulation results from CSV
@@ -79,8 +82,13 @@ def plot_simulation_results(
 
     plt.tight_layout()
     plt.subplots_adjust(top=0.9, right=0.85)
-
-    conditions_text = f"Going First: {going_first_status}\nHopper Included: {hopper_included}\nVirgin Birth Included: {virgin_birth}\nDeck Size: {deck_size}"
+    conditions_text = (
+        f"Going First: {going_first_status}\n"
+        f"Hopper Included: {hopper_included}\n"
+        f"Prosperity Included {prosperity_included}\n"
+        f"Virgin Birth Included: {virgin_birth}\n"
+        f"Deck Size: {deck_size}"
+    )
     plt.figtext(
         0.82,
         0.5,

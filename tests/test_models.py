@@ -30,6 +30,7 @@ class TestZone(unittest.TestCase):
                 Card("macguffin"),
                 Card("tutor"),
                 Card("non_lost_soul", subtype="virgin_birth"),
+                Card("lost_soul", subtype="prosperity"),
             ]
         )
         self.zone = Zone(self.cards)

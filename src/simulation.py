@@ -29,6 +29,7 @@ class Simulation:
         going_first: bool,
         hopper: bool,
         virgin_birth: bool,
+        prosperity: bool,
     ):
         self.macguffin = macguffin
         self.deck_size = deck_size
@@ -39,6 +40,7 @@ class Simulation:
         self.going_first = going_first
         self.hopper = hopper
         self.virgin_birth = virgin_birth
+        self.prosperity = prosperity
         self.souls_in_deck = determine_lost_souls_required(deck_size)
         self.initial_decklist = self.generate_decklist()
         self.deck = Deck(deque(self.initial_decklist))
@@ -64,6 +66,8 @@ class Simulation:
         )
         if self.hopper:
             deck_of_cards.append(Card("lost_soul", subtype="hopper"))
+        if self.prosperity:
+            deck_of_cards.append(Card("lost_soul", subtype="prosperity"))
         if self.virgin_birth:
             deck_of_cards.append(Card("non_lost_soul", subtype="virgin_birth"))
         n_non_lost_souls = self.deck_size - len(deck_of_cards)
@@ -108,9 +112,14 @@ class Simulation:
                 self.hand.add(self.deck.draw_n(1))
             if lost_soul.subtype == "cycler":
                 # use cycler to dig for macguffin
-                if self.hand.count("macguffin") == 0:
+                if self.hand.count("macguffin") == 0 and self.hand.count("tutor") == 0:
                     self.deck.bottom_cards([self.hand.remove("non_lost_soul")])
                     self.hand.add(self.deck.draw_n(1))
+            elif lost_soul.subtype == "prosperity":
+                # use prosperity to dig for macguffin
+                if self.hand.count("macguffin") == 0 and self.hand.count("tutor") == 0:
+                    self.discard.add(self.hand.remove("non_lost_soul"))
+                    self.hand.add(self.deck.draw_n(2))
 
         # play macguffin, if we have it
         if self.hand.count("macguffin") > 0:
@@ -136,6 +145,7 @@ class Simulation:
             "deck_size": self.deck_size,
             "n_cycler_souls": self.n_cycler_souls,
             "has_hopper": self.hopper,
+            "has_prosperity": self.prosperity,
         }
 
     @staticmethod
@@ -154,6 +164,7 @@ class Simulation:
             "deck_size",
             "n_cycler_souls",
             "has_hopper",
+            "has_prosperity",
         ]
         with open("game_log.csv", "w", newline="", encoding="utf-8") as f:
             writer = csv.DictWriter(f, fieldnames=headers)

@@ -33,7 +33,7 @@ def parse_args():
         "--n_cycler_souls_to_try",
         nargs="+",
         type=int,
-        default=[0, 1, 2],
+        default=[0, 1],
         help="Number of cycler souls to try in simulations.",
     )
     parser.add_argument(
@@ -62,6 +62,11 @@ def parse_args():
         help="Whether or not to include The Virgin Birth in the deck.",
     )
     parser.add_argument(
+        "--prosperity",
+        action="store_true",
+        help="Wheter or not to include the prosperity lost soul in the deck.",
+    )
+    parser.add_argument(
         "--generate_plot",
         action="store_true",
         help="If flag included, generate a heatmap of the simulation's results.",
@@ -88,6 +93,7 @@ if __name__ == "__main__":
                     going_first=args.going_first,
                     hopper=args.hopper,
                     virgin_birth=args.virgin_birth,
+                    prosperity=args.prosperity,
                 )
                 simulation.simulate_game()
 
@@ -103,4 +109,5 @@ if __name__ == "__main__":
             hopper=args.hopper,
             deck_size=deck_size,  # Note: This will use the last deck_size from the loop.
             virgin_birth=args.virgin_birth,
+            prosperity=args.prosperity,
         )
