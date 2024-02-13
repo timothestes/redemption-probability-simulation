@@ -18,7 +18,7 @@ The project supports generating plots of the simulation results, providing visua
 
 ## Requirements
 
-A valid version of python3. 
+Requires Python3 to be installed on your computer. 
 
 ## Installation
 1. Clone this repository to your local machine.
@@ -48,6 +48,7 @@ python3 -m src.main \
     --going_first \
     --hopper \
     --virgin_birth \
+    --prosperity \
     --generate_plot
 ```
 
@@ -55,10 +56,11 @@ python3 -m src.main \
 - `--n_simulations`: Number of simulations to run (default: 5000).
 - `--n_tutors_to_try`: Space-separated list of tutor counts to try in simulations.
 - `--n_cycler_souls_to_try`: Space-separated list of cycler soul counts to try.
-- `--deck_sizes_to_try`: Space-separated list of deck sizes to try (not tested for multiple deck sizes yet).
+- `--deck_sizes_to_try`: Space-separated list of deck sizes to try (not tested for multiple deck sizes yet). Lost Souls added automatically.
 - `--n_turns`: Number of turns per simulation (default: 1, not tested for above one yet).
 - `--going_first`: Flag to simulate going first in the game (which means 3 cards will not be drawn at the start of the first turn).
-- `--hopper`: Flag to include the hopper card in the deck.
+- `--hopper`: Flag to include the hopper lost soul in the deck (will not count towards Lost Soul limit).
+- `--prosperity`: Flag to include the "Prosperity" lost soul in the deck (counts towards Lost Soul limit).
 - `--virgin_birth`: Flag to include The Virgin Birth in the deck.
 - `--generate_plot`: Flag to generate a heatmap of the simulation's results.
 
