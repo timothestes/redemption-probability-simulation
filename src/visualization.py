@@ -19,12 +19,14 @@ def plot_simulation_results(
     deck_size: int,
     virgin_birth: bool,
     prosperity: bool,
+    four_drachma_coin: bool,
 ):
     """Print the results of the simulation as a heatmap."""
     print("creating visualization")
     going_first_status = "True" if going_first else "False"
     hopper_included = "True" if hopper else "False"
     prosperity_included = "True" if prosperity else "False"
+    four_drachma_coin = "True" if four_drachma_coin else "False"
     params = {
         "goingfirst": going_first_status,
         "hopper": hopper_included,
@@ -32,6 +34,7 @@ def plot_simulation_results(
         "virgin_birth": virgin_birth,
         "numsims": num_simulations,
         "prosperity": prosperity,
+        "four_drachma_coin": four_drachma_coin,
     }
 
     # Load the simulation results from CSV
@@ -87,6 +90,7 @@ def plot_simulation_results(
         f"Hopper Included: {hopper_included}\n"
         f"Prosperity Included {prosperity_included}\n"
         f"Virgin Birth Included: {virgin_birth}\n"
+        f"Four-Drachma Coin Included: {four_drachma_coin}\n"
         f"Deck Size: {deck_size}"
     )
     plt.figtext(

@@ -1,77 +1,62 @@
 # Redemption Probability Simulation
 
 ## Overview
-This project is a "Monte Carlo" experiment for the Redemption card game that enables insights about the probabilities of a given event will happen. 
-
-In this first draft, I wanted to see how probable it was to get Matthew into play on turn one. Users can tweak various simulation parameters, such as the number of simulations to run, deck sizes to consider, and specific card inclusions like the hopper lost soul. 
-
-The project supports generating plots of the simulation results, providing visual insights into the outcomes of different configurations.
+This project simulates various scenarios within the Redemption card game, providing insights into the probabilities of specific events occurring based on user-defined simulation parameters. It incorporates Monte Carlo experiment techniques to assess the impact of different variables, such as deck sizes, inclusion of specific cards (e.g., the hopper lost soul), and gameplay strategies, on the game's outcome.
 
 ## Features
-- Simulation of Redemption card game scenarios.
-- Customizable simulation parameters through command-line arguments.
-- Support for generating and saving heatmap plots of the simulation outcomes.
-- Configurable deck compositions with options for including specific cards.
-
-## Planned
-- More complex interactions (Territory class enhancements, Cards that draw other cards like Denarius)
+- Simulation of Redemption card game scenarios with customizable parameters.
+- Parsing of command-line arguments to adjust simulation specifics like the number of simulations, tutors, cycler souls, deck size, and game turns.
+- Ability to simulate conditions like going first in the game and including special cards (hopper, virgin birth, prosperity, four drachma coin).
+- Support for summarizing results into a CSV file for detailed analysis.
 
 ## Requirements
-
-Requires Python3 to be installed on your computer. 
+- Python 3 installed on the computer.
 
 ## Installation
-1. Clone this repository to your local machine.
-
-```
+1. Clone the repository to your local machine.
+```shell
 git clone https://github.com/timothestes/redemption-probability-simulation.git
 ```
-
-2. Navigate to the project directory.
-```
+Navigate to the project directory.
+```shell
 cd redemption-probability-simulation
 ```
-
-3. Install the required Python packages.
-```
+Install the required Python packages.
+```shell
 sh config.sh
 ```
 
 ## Usage
-To run a simulation, navigate to the project root directory and execute the `main.py` script with the desired parameters. Here are some examples:
+Navigate to the project root directory and execute the main.py script with desired parameters. Example command:
 
 ```shell
 python3 -m src.main \
-    --n_simulations 50000 \
-    --deck_sizes_to_try 50 \
-    --n_cycler_souls_to_try 0 1 2 \
+    --n_simulations 5000 \
+    --n_tutors_to_try 0 1 2 3 4 5 6 7 8 9 \
+    --n_cycler_souls_to_try 0 1 \
+    --deck_size 50 \
+    --n_turns 1 \
     --going_first \
-    --hopper \
-    --virgin_birth \
-    --prosperity \
-    --generate_plot
+    --summarize_results
 ```
 
-### Command-Line Arguments
-- `--n_simulations`: Number of simulations to run (default: 5000).
-- `--n_tutors_to_try`: Space-separated list of tutor counts to try in simulations.
-- `--n_cycler_souls_to_try`: Space-separated list of cycler soul counts to try.
-- `--deck_sizes_to_try`: Space-separated list of deck sizes to try (not tested for multiple deck sizes yet). Lost Souls added automatically.
-- `--n_turns`: Number of turns per simulation (default: 1, not tested for above one yet).
-- `--going_first`: Flag to simulate going first in the game (which means 3 cards will not be drawn at the start of the first turn).
-- `--hopper`: Flag to include the hopper lost soul in the deck (will not count towards Lost Soul limit).
-- `--prosperity`: Flag to include the "Prosperity" lost soul in the deck (counts towards Lost Soul limit).
-- `--virgin_birth`: Flag to include The Virgin Birth in the deck.
-- `--generate_plot`: Flag to generate a heatmap of the simulation's results.
+## Command-Line Arguments
+`--n_simulations`: Number of simulations to run (default: 5000).
 
-## Plotting Results
-If the `--generate_plot` flag is included, the script will generate a heatmap visualizing the percentage of games with the desired outcome based on the simulation parameters. The plot will be saved in the `tmp/` directory.
+`--n_tutors_to_try`: Space-separated list of tutor counts to try in simulations.
 
-Here's an example heat map (not going first, no hopper, 50 card deck, and 50,0000 simulations):
-![Example Heat Map](assets/simulation_goingfirst-False_hopper-False_decksize-50_numsims-50000.png "Example Heat Map")
+`--n_cycler_souls_to_try`: Space-separated list of cycler soul counts to try.
+
+`--deck_size`: Deck size for the simulations (default: 50).
+
+`--n_turns`: Number of turns per simulation (default: 1).
+
+`--going_first`: Flag to simulate going first in the game.
+
+`--summarize_results`: Flag to generate a summary CSV of the results.
 
 ## Contributing
-Contributions to the Redemption Probability Simulation project are welcome! Please create your branch and make a pull request.
+Contributions are welcome. Please fork the repository, make your changes, and submit a pull request.
 
 ## License
-This project is licensed under the [MIT License](LICENSE).
+Licensed under the MIT License.

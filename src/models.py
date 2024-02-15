@@ -30,13 +30,6 @@ class Zone:
         # Store the original state
         self.original_cards = cards.copy() if cards else None
         self.cards = cards or deque()
-        self._initialize_card_types()
-
-    def _initialize_card_types(self):
-        """Initialize or reset the count of card types."""
-        self._card_types = {card_type: 0 for card_type in CARD_TYPES}
-        for card in self.cards:
-            self._card_types[card.card_type] += 1
 
     def reset(self):
         """Reset the zone to its original state, if an original state was provided."""
@@ -44,7 +37,6 @@ class Zone:
             self.cards = self.original_cards.copy()
         else:
             self.cards.clear()
-        self._initialize_card_types()
 
     def add(self, cards):
         """Add a list or single card to a given zone."""
@@ -60,23 +52,23 @@ class Zone:
     def append(self, card: Card):
         """Add a single card to a given zone."""
         self.cards.append(card)
-        self._card_types[card.card_type] += 1
 
-    def count(self, card_type: str):
-        """Get the count of the number of cards of a given type in the zone."""
-        return self._card_types.get(card_type, 0)
+    def count(self, card_type: Optional[str] = None, subtype: Optional[str] = None):
+        """Count cards by type and optionally by subtype."""
+        return sum(
+            1
+            for card in self.cards
+            if (not card_type or card.card_type == card_type)
+            and (not subtype or hasattr(card, "subtype") and card.subtype == subtype)
+        )
 
-    def remove(self, card_type: str = None):
-        """Remove and return a card of the given type from the zone."""
-        if not card_type:
-            removed_card = self.cards.popleft()
-            self._card_types[removed_card.card_type] -= 1
-            return removed_card
-
-        for card in list(self.cards):  # Convert deque to list for iteration
-            if card.card_type == card_type:
+    def remove(self, card_type: Optional[str] = None, subtype: Optional[str] = None):
+        """Remove a card by type and optionally by subtype."""
+        for card in list(self.cards):
+            if (not card_type or card.card_type == card_type) and (
+                not subtype or hasattr(card, "subtype") and card.subtype == subtype
+            ):
                 self.cards.remove(card)
-                self._card_types[card.card_type] -= 1
                 return card
         return None
 
@@ -111,8 +103,6 @@ class Zone:
                 subtype and hasattr(card, "subtype") and card.subtype == subtype
             ):
                 self.cards.remove(card)
-                if card_type:
-                    self._card_types[card.card_type] -= 1
                 return card
         return None
 
@@ -187,13 +177,15 @@ class Deck(Zone):
         priority_order = (
             "macguffin",
             "tutor",
+            "peter",
+            "coin",
             "lost_soul",
         )
         output = None
 
         for priority in priority_order:
             for card in list(top_six_cards):
-                if card.card_type == priority:
+                if card.card_type == priority or card.subtype == priority:
                     output = card
                     top_six_cards.remove(card)
                     break

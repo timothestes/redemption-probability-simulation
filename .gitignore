@@ -160,5 +160,6 @@ mp3_files/*
 media/*
 game_log.json
 game_log.csv
+game_log*.csv
 *card_prices.csv
 tbd*

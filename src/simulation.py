@@ -30,6 +30,7 @@ class Simulation:
         hopper: bool,
         virgin_birth: bool,
         prosperity: bool,
+        four_drachma_coin: bool,
     ):
         self.macguffin = macguffin
         self.deck_size = deck_size
@@ -41,12 +42,14 @@ class Simulation:
         self.hopper = hopper
         self.virgin_birth = virgin_birth
         self.prosperity = prosperity
+        self.four_drachma_coin = four_drachma_coin
         self.souls_in_deck = determine_lost_souls_required(deck_size)
         self.initial_decklist = self.generate_decklist()
         self.deck = Deck(deque(self.initial_decklist))
         self.territory = Territory(cards=[])
         self.discard = Discard(cards=[])
         self.hand = Hand(cards=[])
+        self.cards_seen = 0
 
     def generate_decklist(self) -> deque[Card]:
         """Generate a deck based on certain parameters."""
@@ -70,6 +73,10 @@ class Simulation:
             deck_of_cards.append(Card("lost_soul", subtype="prosperity"))
         if self.virgin_birth:
             deck_of_cards.append(Card("non_lost_soul", subtype="virgin_birth"))
+        if self.four_drachma_coin:
+            # add peter and four-drachma coin to the deck
+            deck_of_cards.append(Card("non_lost_soul", subtype="peter"))
+            deck_of_cards.append(Card("non_lost_soul", subtype="coin"))
         n_non_lost_souls = self.deck_size - len(deck_of_cards)
         deck_of_cards.extend([Card("non_lost_soul") for _ in range(n_non_lost_souls)])
 
@@ -81,20 +88,19 @@ class Simulation:
         self.territory.reset()
         self.discard.reset()
         self.hand.reset()
+        self.cards_seen = 0
 
-    def _take_a_turn(
-        self,
-        turn_number: int,
-        sim_number: int,
-    ) -> dict:
-        """Take a turn of redemption."""
-        # draw 3 cards for turn (except if on the play)
-        if not (self.going_first and turn_number == 1):
-            drawn_cards = self.deck.draw_n(3)
+    def _draw_cards(self, n_cards: int, resolve_stars=False):
+        """Handle anytime we draw cards during the game."""
+        drawn_cards = self.deck.draw_n(n_cards)
+        self.cards_seen += n_cards
+
+        if resolve_stars:
             # resolve the virgin birth
             if self.virgin_birth:
                 for i, card in enumerate(drawn_cards):
                     if card.subtype == "virgin_birth":
+                        self.cards_seen += 6
                         # replace virgin birth with a card from the top 6
                         drawn_cards[i] = self.deck.resolve_the_virgin_birth(
                             drawn_cards[i]
@@ -110,16 +116,46 @@ class Simulation:
             if not self.deck.cards_in_deck == 0:
                 # then redraw
                 self.hand.add(self.deck.draw_n(1))
+                self.cards_seen += 1
             if lost_soul.subtype == "cycler":
                 # use cycler to dig for macguffin
                 if self.hand.count("macguffin") == 0 and self.hand.count("tutor") == 0:
+                    # TODO: this will currently underdeck peter and coin, but we want to prioritize underdeck... please implement a hand.smart_choose function
                     self.deck.bottom_cards([self.hand.remove("non_lost_soul")])
                     self.hand.add(self.deck.draw_n(1))
+                    self.cards_seen += 1
             elif lost_soul.subtype == "prosperity":
                 # use prosperity to dig for macguffin
                 if self.hand.count("macguffin") == 0 and self.hand.count("tutor") == 0:
+                    # TODO: this will currently discard peter and coin, but we want to prioritize discarding... please implement a hand.smart_choose function
                     self.discard.add(self.hand.remove("non_lost_soul"))
                     self.hand.add(self.deck.draw_n(2))
+                    self.cards_seen += 2
+
+    def _take_a_turn(
+        self,
+        turn_number: int,
+        sim_number: int,
+    ) -> dict:
+        """Take a turn of redemption."""
+        # draw 3 cards for turn (except if on the play), resolve star abilites
+        if not (self.going_first and turn_number == 1):
+            self._draw_cards(n_cards=3, resolve_stars=True)
+
+        # play peter
+        if self.hand.count(subtype="peter") > 0:
+            self.territory.add(self.hand.remove(subtype="peter"))
+        # play coin
+        if self.hand.count(subtype="coin") > 0:
+            self.territory.add(self.hand.remove(subtype="coin"))
+        # if we have coin and peter in play, discard coin to draw 4
+        if (
+            self.territory.count(subtype="coin") > 0
+            and self.territory.count(subtype="peter") > 0
+        ):
+            self.discard.add(self.territory.remove(subtype="coin"))
+            self._draw_cards(n_cards=4, resolve_stars=False)
+            self.cards_seen += 4
 
         # play macguffin, if we have it
         if self.hand.count("macguffin") > 0:
@@ -144,8 +180,11 @@ class Simulation:
             "n_tutors_in_starting_deck": self.n_tutors,
             "deck_size": self.deck_size,
             "n_cycler_souls": self.n_cycler_souls,
+            "has_virgin_birth": self.virgin_birth,
             "has_hopper": self.hopper,
             "has_prosperity": self.prosperity,
+            "has_four_drachma_coin": self.four_drachma_coin,
+            "cards_seen": self.cards_seen,
         }
 
     @staticmethod
@@ -163,8 +202,11 @@ class Simulation:
             "n_tutors_in_starting_deck",
             "deck_size",
             "n_cycler_souls",
+            "has_virgin_birth",
             "has_hopper",
             "has_prosperity",
+            "has_four_drachma_coin",
+            "cards_seen",
         ]
         with open("game_log.csv", "w", newline="", encoding="utf-8") as f:
             writer = csv.DictWriter(f, fieldnames=headers)
@@ -191,10 +233,7 @@ class Simulation:
             self.reset_simulation_state()  # Reset deck, hand, discard, and territory
 
             # draw 8 cards from deck
-            self.hand.add(self.deck.draw_n(8))
-            # resolve virgin birth star ability
-            if virgin_birth := self.hand.search_for(subtype="virgin_birth"):
-                self.hand.add(self.deck.resolve_the_virgin_birth(virgin_birth))
+            self._draw_cards(n_cards=8, resolve_stars=True)
 
             # Log file for the current game simulation
             log_file = []

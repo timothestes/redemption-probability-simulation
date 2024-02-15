@@ -9,9 +9,10 @@ and potentially generating plots based on the results.
 """
 
 import argparse
+import itertools
 
 from src.simulation import Simulation
-from src.visualization import plot_simulation_results
+from src.summarization import summarize_results
 
 
 def parse_args():
@@ -26,7 +27,7 @@ def parse_args():
         "--n_tutors_to_try",
         nargs="+",
         type=int,
-        default=[0, 1, 2, 3, 4, 5, 6, 7, 8],
+        default=[0, 1, 2, 3, 4, 5, 6, 7, 8, 9],
         help="Number of tutors to try in simulations.",
     )
     parser.add_argument(
@@ -34,14 +35,13 @@ def parse_args():
         nargs="+",
         type=int,
         default=[0, 1],
-        help="Number of cycler souls to try in simulations.",
+        help="Number of cycler souls to try in the simulations.",
     )
     parser.add_argument(
-        "--deck_sizes_to_try",
-        nargs="+",
+        "--deck_size",
         type=int,
-        default=[50],
-        help="Deck sizes to try in simulations.",
+        default=50,
+        help="Deck size to try in the simulations.",
     )
     parser.add_argument(
         "--n_turns", type=int, default=1, help="Number of turns per simulation."
@@ -52,24 +52,9 @@ def parse_args():
         help="Whether or not you are going first in the game.",
     )
     parser.add_argument(
-        "--hopper",
+        "--summarize_results",
         action="store_true",
-        help="Whether or not to include hopper in the deck.",
-    )
-    parser.add_argument(
-        "--virgin_birth",
-        action="store_true",
-        help="Whether or not to include The Virgin Birth in the deck.",
-    )
-    parser.add_argument(
-        "--prosperity",
-        action="store_true",
-        help="Wheter or not to include the prosperity lost soul in the deck.",
-    )
-    parser.add_argument(
-        "--generate_plot",
-        action="store_true",
-        help="If flag included, generate a heatmap of the simulation's results.",
+        help="If flag included, generate a summary csv of the results.",
     )
     return parser.parse_args()
 
@@ -80,20 +65,27 @@ if __name__ == "__main__":
     # Initialize log file before running simulations
     Simulation.create_empty_log_file()
 
-    for deck_size in args.deck_sizes_to_try:
-        for n_tutors in args.n_tutors_to_try:
-            for n_cycler_souls in args.n_cycler_souls_to_try:
+    boolean_options = [True, False]
+    for (
+        hopper,
+        virgin_birth,
+        prosperity,
+        four_drachma_coin,
+    ) in itertools.product(boolean_options, repeat=4):
+        for n_cycler_souls in args.n_cycler_souls_to_try:
+            for n_tutors in args.n_tutors_to_try:
                 simulation = Simulation(
                     macguffin="Matthew",
-                    deck_size=deck_size,
+                    deck_size=args.deck_size,
                     n_cycler_souls=n_cycler_souls,
                     n_tutors=n_tutors,
                     n_simulations=args.n_simulations,
                     n_turns=args.n_turns,
                     going_first=args.going_first,
-                    hopper=args.hopper,
-                    virgin_birth=args.virgin_birth,
-                    prosperity=args.prosperity,
+                    hopper=hopper,
+                    virgin_birth=virgin_birth,
+                    prosperity=prosperity,
+                    four_drachma_coin=four_drachma_coin,
                 )
                 simulation.simulate_game()
 
@@ -101,13 +93,6 @@ if __name__ == "__main__":
     simulation.print_file_size("game_log.csv")
 
     # Generate plot if required
-    if args.generate_plot:
+    if args.summarize_results:
         # Adjust parameters as needed to reflect overall simulations
-        plot_simulation_results(
-            num_simulations=args.n_simulations,
-            going_first=args.going_first,
-            hopper=args.hopper,
-            deck_size=deck_size,  # Note: This will use the last deck_size from the loop.
-            virgin_birth=args.virgin_birth,
-            prosperity=args.prosperity,
-        )
+        summarize_results(num_simulations=args.n_simulations)
