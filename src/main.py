@@ -71,7 +71,8 @@ if __name__ == "__main__":
         virgin_birth,
         prosperity,
         four_drachma_coin,
-    ) in itertools.product(boolean_options, repeat=4):
+        denarius,
+    ) in itertools.product(boolean_options, repeat=5):
         for n_cycler_souls in args.n_cycler_souls_to_try:
             for n_tutors in args.n_tutors_to_try:
                 simulation = Simulation(
@@ -86,6 +87,7 @@ if __name__ == "__main__":
                     virgin_birth=virgin_birth,
                     prosperity=prosperity,
                     four_drachma_coin=four_drachma_coin,
+                    denarius=denarius,
                 )
                 simulation.simulate_game()
 

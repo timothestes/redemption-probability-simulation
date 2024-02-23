@@ -31,6 +31,7 @@ class Simulation:
         virgin_birth: bool,
         prosperity: bool,
         four_drachma_coin: bool,
+        denarius: bool,
     ):
         self.macguffin = macguffin
         self.deck_size = deck_size
@@ -43,6 +44,7 @@ class Simulation:
         self.virgin_birth = virgin_birth
         self.prosperity = prosperity
         self.four_drachma_coin = four_drachma_coin
+        self.denarius = denarius
         self.souls_in_deck = determine_lost_souls_required(deck_size)
         self.initial_decklist = self.generate_decklist()
         self.deck = Deck(deque(self.initial_decklist))
@@ -77,6 +79,11 @@ class Simulation:
             # add peter and four-drachma coin to the deck
             deck_of_cards.append(Card("non_lost_soul", subtype="peter"))
             deck_of_cards.append(Card("non_lost_soul", subtype="coin"))
+        if self.denarius:
+            # add denarious and one roman emperor to the deck
+            deck_of_cards.append(Card("non_lost_soul", subtype="denarius"))
+            deck_of_cards.append(Card("non_lost_soul", subtype="emperor"))
+
         n_non_lost_souls = self.deck_size - len(deck_of_cards)
         deck_of_cards.extend([Card("non_lost_soul") for _ in range(n_non_lost_souls)])
 
@@ -89,6 +96,55 @@ class Simulation:
         self.discard.reset()
         self.hand.reset()
         self.cards_seen = 0
+
+    def _play_drachma_coin_cards(self):
+        """Play out peter and four drachma coin."""
+        # play peter
+        if self.hand.count(subtype="peter") > 0:
+            self.territory.add(self.hand.remove(subtype="peter"))
+        # play coin
+        if self.hand.count(subtype="coin") > 0:
+            self.territory.add(self.hand.remove(subtype="coin"))
+        # if we have coin and peter in play, discard coin to draw 4
+        if (
+            self.territory.count(subtype="coin") > 0
+            and self.territory.count(subtype="peter") > 0
+        ):
+            self.discard.add(self.territory.remove(subtype="coin"))
+            self._draw_cards(n_cards=4, resolve_stars=False)
+            self.cards_seen += 4
+            # play any cards drawn
+            self._play_draw_cards()
+
+    def _play_denarius_cards(self):
+        """Play out the denarius cards."""
+        # play denarius
+        if self.hand.count(subtype="denarius") > 0:
+            self.territory.add(self.hand.remove(subtype="denarius"))
+            # search deck for an emperor
+            if self.deck.count(subtype="emperor") > 0:
+                self.hand.add(self.deck.search_for(subtype="emperor"))
+        # play emperor
+        if self.hand.count(subtype="emperor") > 0:
+            self.territory.add(self.hand.remove(subtype="emperor"))
+
+        # check to see if we have both in play
+        if (
+            self.territory.count(subtype="denarius") == 1
+            and self.territory.count(subtype="emperor") > 0
+        ):
+            # if we have denarius and at least one emperor, discard denarius to draw 3
+            self.discard.add(self.territory.remove(subtype="denarius"))
+            self._draw_cards(n_cards=3, resolve_stars=False)
+            # play any cards drawn
+            self._play_draw_cards()
+
+    def _play_draw_cards(self):
+        """Play cards out of our hand."""
+        if self.four_drachma_coin:
+            self._play_drachma_coin_cards()
+        if self.denarius:
+            self._play_denarius_cards()
 
     def _draw_cards(self, n_cards: int, resolve_stars=False):
         """Handle anytime we draw cards during the game."""
@@ -142,20 +198,8 @@ class Simulation:
         if not (self.going_first and turn_number == 1):
             self._draw_cards(n_cards=3, resolve_stars=True)
 
-        # play peter
-        if self.hand.count(subtype="peter") > 0:
-            self.territory.add(self.hand.remove(subtype="peter"))
-        # play coin
-        if self.hand.count(subtype="coin") > 0:
-            self.territory.add(self.hand.remove(subtype="coin"))
-        # if we have coin and peter in play, discard coin to draw 4
-        if (
-            self.territory.count(subtype="coin") > 0
-            and self.territory.count(subtype="peter") > 0
-        ):
-            self.discard.add(self.territory.remove(subtype="coin"))
-            self._draw_cards(n_cards=4, resolve_stars=False)
-            self.cards_seen += 4
+        # play any relevant cards in our hand.
+        self._play_draw_cards()
 
         # play macguffin, if we have it
         if self.hand.count("macguffin") > 0:
@@ -184,6 +228,7 @@ class Simulation:
             "has_hopper": self.hopper,
             "has_prosperity": self.prosperity,
             "has_four_drachma_coin": self.four_drachma_coin,
+            "has_denarius": self.denarius,
             "cards_seen": self.cards_seen,
         }
 
@@ -206,6 +251,7 @@ class Simulation:
             "has_hopper",
             "has_prosperity",
             "has_four_drachma_coin",
+            "has_denarius",
             "cards_seen",
         ]
         with open("game_log.csv", "w", newline="", encoding="utf-8") as f:
