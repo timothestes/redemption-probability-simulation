@@ -180,7 +180,8 @@ class Simulation:
                         drawn_cards[i] = self.deck.resolve_the_virgin_birth(
                             drawn_cards[i]
                         )
-            self.hand.add(drawn_cards)
+
+        self.hand.add(drawn_cards)
 
         # handle lost souls that are in our hand
         while self.hand.count("lost_soul") > 0:
