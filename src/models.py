@@ -179,7 +179,9 @@ class Deck(Zone):
             "tutor",
             "peter",
             "coin",
+            "denarius",
             "lost_soul",
+            "emperor",
         )
         output = None
 
