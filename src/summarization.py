@@ -29,14 +29,14 @@ def summarize_results(num_simulations: int):
                     "has_prosperity",
                     "has_four_drachma_coin",
                     "has_denarius",
-                    "deck_size",
+                    # "deck_size",
                     "n_cycler_souls",
                     "n_tutors_in_starting_deck",
                 ]
             )
             .agg(
                 {
-                    "cards_seen": "mean",
+                    "n_cards_drawn": "mean",
                     "macguffin_in_territory": "mean",
                 }
             )
@@ -62,14 +62,14 @@ def summarize_results(num_simulations: int):
                 "has_prosperity",
                 "has_four_drachma_coin",
                 "has_denarius",
-                "deck_size",
+                # "deck_size",
                 "n_cycler_souls",
                 "n_tutors_in_starting_deck",
             ]
         )
         .agg(
             {
-                "cards_seen": "mean",
+                "n_cards_drawn": "mean",
                 "macguffin_in_territory": "mean",
             }
         )
@@ -79,14 +79,14 @@ def summarize_results(num_simulations: int):
     # Rename columns for clarity
     final_summary_df.rename(
         columns={
-            "cards_seen": "average_cards_seen",
+            "n_cards_drawn": "average_n_cards_drawn",
             "macguffin_in_territory": "percentage_macguffin_in_territory",
         },
         inplace=True,
     )
 
     # Define the filename to include the number of simulations for better traceability
-    filename_csv = f"tmp/average_cards_seen_per_game_{num_simulations}_simulations.csv"
+    filename_csv = f"tmp/averages_across_{num_simulations}_simulations.csv"
     # Export the final summary to a CSV file
     final_summary_df.to_csv(filename_csv, index=False)
 

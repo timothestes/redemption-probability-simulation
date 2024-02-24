@@ -46,12 +46,15 @@ class Simulation:
         self.four_drachma_coin = four_drachma_coin
         self.denarius = denarius
         self.souls_in_deck = determine_lost_souls_required(deck_size)
+        # prosperity and n_cycler_souls subtract from the number of other souls in the deck.
+        self.modified_souls_in_deck = (
+            self.souls_in_deck - int(prosperity) - n_cycler_souls
+        )
         self.initial_decklist = self.generate_decklist()
         self.deck = Deck(deque(self.initial_decklist))
         self.territory = Territory(cards=[])
         self.discard = Discard(cards=[])
         self.hand = Hand(cards=[])
-        self.cards_seen = 0
 
     def generate_decklist(self) -> deque[Card]:
         """Generate a deck based on certain parameters."""
@@ -60,19 +63,27 @@ class Simulation:
         # Initialize deck with specified cards
         deck_of_cards.append(Card("macguffin"))
         deck_of_cards.extend([Card("tutor") for _ in range(self.n_tutors)])
-        deck_of_cards.extend(
-            [Card("lost_soul", subtype="cycler") for _ in range(self.n_cycler_souls)]
-        )
-        deck_of_cards.extend(
-            [
-                Card("lost_soul", subtype="meek")
-                for _ in range(self.souls_in_deck - self.n_cycler_souls)
-            ]
-        )
+
+        # add lost souls
         if self.hopper:
             deck_of_cards.append(Card("lost_soul", subtype="hopper"))
         if self.prosperity:
             deck_of_cards.append(Card("lost_soul", subtype="prosperity"))
+        if self.n_cycler_souls:
+            deck_of_cards.extend(
+                [
+                    Card("lost_soul", subtype="cycler")
+                    for _ in range(self.n_cycler_souls)
+                ]
+            )
+        deck_of_cards.extend(
+            [
+                Card("lost_soul", subtype="meek")
+                for _ in range(self.modified_souls_in_deck)
+            ]
+        )
+
+        # add other cards
         if self.virgin_birth:
             deck_of_cards.append(Card("non_lost_soul", subtype="virgin_birth"))
         if self.four_drachma_coin:
@@ -84,8 +95,9 @@ class Simulation:
             deck_of_cards.append(Card("non_lost_soul", subtype="denarius"))
             deck_of_cards.append(Card("non_lost_soul", subtype="emperor"))
 
-        n_non_lost_souls = self.deck_size - len(deck_of_cards)
-        deck_of_cards.extend([Card("non_lost_soul") for _ in range(n_non_lost_souls)])
+        # fill the rest with chaff
+        other_cards = self.deck_size - len(deck_of_cards)
+        deck_of_cards.extend([Card("non_lost_soul") for _ in range(other_cards)])
 
         return deck_of_cards
 
@@ -95,7 +107,6 @@ class Simulation:
         self.territory.reset()
         self.discard.reset()
         self.hand.reset()
-        self.cards_seen = 0
 
     def _play_drachma_coin_cards(self):
         """Play out peter and four drachma coin."""
@@ -112,7 +123,6 @@ class Simulation:
         ):
             self.discard.add(self.territory.remove(subtype="coin"))
             self._draw_cards(n_cards=4, resolve_stars=False)
-            self.cards_seen += 4
             # play any cards drawn
             self._play_draw_cards()
 
@@ -146,17 +156,26 @@ class Simulation:
         if self.denarius:
             self._play_denarius_cards()
 
+    def _play_macguffin(self):
+        """Play the macguffin if we have it."""
+        if self.hand.count("macguffin") > 0:
+            self.territory.add(self.hand.remove("macguffin"))
+        # if we don't have macguffin, try to tutor for it
+        elif self.hand.count("tutor") > 0 and self.deck.count("macguffin") > 0:
+            self.territory.add(self.hand.remove("tutor"))
+            macguffin_card = self.deck.search_for("macguffin")
+            if macguffin_card:
+                self.territory.add(macguffin_card)
+
     def _draw_cards(self, n_cards: int, resolve_stars=False):
         """Handle anytime we draw cards during the game."""
         drawn_cards = self.deck.draw_n(n_cards)
-        self.cards_seen += n_cards
 
         if resolve_stars:
             # resolve the virgin birth
             if self.virgin_birth:
                 for i, card in enumerate(drawn_cards):
                     if card.subtype == "virgin_birth":
-                        self.cards_seen += 6
                         # replace virgin birth with a card from the top 6
                         drawn_cards[i] = self.deck.resolve_the_virgin_birth(
                             drawn_cards[i]
@@ -172,21 +191,18 @@ class Simulation:
             if not self.deck.cards_in_deck == 0:
                 # then redraw
                 self.hand.add(self.deck.draw_n(1))
-                self.cards_seen += 1
             if lost_soul.subtype == "cycler":
                 # use cycler to dig for macguffin
                 if self.hand.count("macguffin") == 0 and self.hand.count("tutor") == 0:
                     # TODO: this will currently underdeck peter and coin, but we want to prioritize underdeck... please implement a hand.smart_choose function
                     self.deck.bottom_cards([self.hand.remove("non_lost_soul")])
                     self.hand.add(self.deck.draw_n(1))
-                    self.cards_seen += 1
             elif lost_soul.subtype == "prosperity":
                 # use prosperity to dig for macguffin
                 if self.hand.count("macguffin") == 0 and self.hand.count("tutor") == 0:
                     # TODO: this will currently discard peter and coin, but we want to prioritize discarding... please implement a hand.smart_choose function
                     self.discard.add(self.hand.remove("non_lost_soul"))
                     self.hand.add(self.deck.draw_n(2))
-                    self.cards_seen += 2
 
     def _take_a_turn(
         self,
@@ -201,58 +217,50 @@ class Simulation:
         # play any relevant cards in our hand.
         self._play_draw_cards()
 
-        # play macguffin, if we have it
-        if self.hand.count("macguffin") > 0:
-            self.territory.add(self.hand.remove("macguffin"))
-        # if we don't have macguffin, try to tutor for it
-        elif self.hand.count("tutor") > 0 and self.deck.count("macguffin") > 0:
-            self.territory.add(self.hand.remove("tutor"))
-            macguffin_card = self.deck.search_for("macguffin")
-            if macguffin_card:
-                self.territory.add(macguffin_card)
+        self._play_macguffin()
 
         # return the turn log
         return {
-            "simulation": sim_number,
-            "turn": turn_number,
-            "n_cards_in_deck": len(self.deck.cards),
-            "n_cards_in_hand": len(self.hand.cards),
-            "n_lost_souls_in_play": self.territory.count("lost_soul"),
-            "n_lost_souls_in_starting_deck": self.souls_in_deck,
+            # "simulation": sim_number,
+            # "turn": turn_number,
+            # "n_cards_left_in_deck": len(self.deck.cards),
+            "n_cards_drawn": self.deck_size - len(self.deck.cards),
+            # "n_cards_in_hand": len(self.hand.cards),
+            # "n_lost_souls_in_play": self.territory.count("lost_soul"),
+            # "n_lost_souls_in_starting_deck": self.souls_in_deck,
             "going_first": self.going_first,
             "macguffin_in_territory": bool(self.territory.count("macguffin")),
             "n_tutors_in_starting_deck": self.n_tutors,
-            "deck_size": self.deck_size,
+            # "deck_size": self.deck_size,
             "n_cycler_souls": self.n_cycler_souls,
             "has_virgin_birth": self.virgin_birth,
             "has_hopper": self.hopper,
             "has_prosperity": self.prosperity,
             "has_four_drachma_coin": self.four_drachma_coin,
             "has_denarius": self.denarius,
-            "cards_seen": self.cards_seen,
         }
 
     @staticmethod
     def create_empty_log_file():
         """Create empty log file."""
         headers = [
-            "simulation",
-            "turn",
-            "n_cards_in_deck",
-            "n_cards_in_hand",
-            "n_lost_souls_in_play",
-            "n_lost_souls_in_starting_deck",
+            # "simulation",
+            # "turn",
+            # "n_cards_left_in_deck",
+            "n_cards_drawn",
+            # "n_cards_in_hand",
+            # "n_lost_souls_in_play",
+            # "n_lost_souls_in_starting_deck",
             "going_first",
             "macguffin_in_territory",
             "n_tutors_in_starting_deck",
-            "deck_size",
+            # "deck_size",
             "n_cycler_souls",
             "has_virgin_birth",
             "has_hopper",
             "has_prosperity",
             "has_four_drachma_coin",
             "has_denarius",
-            "cards_seen",
         ]
         with open("game_log.csv", "w", newline="", encoding="utf-8") as f:
             writer = csv.DictWriter(f, fieldnames=headers)
