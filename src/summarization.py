@@ -10,16 +10,14 @@ def summarize_results(num_simulations: int):
     Parameters:
     - num_simulations (int): The number of simulations run.
     """
-    chunk_size = 10**6  # Define a suitable chunk size
+    chunk_size = 10**6
     chunks = pd.read_csv("game_log.csv", chunksize=chunk_size)
 
-    summary_list = []  # Initialize an empty list to store summary data from each chunk
+    summary_list = []
 
     for df in chunks:
-        # Convert 'macguffin_in_territory' to integer (1 for True, 0 for False)
         df["macguffin_in_territory"] = df["macguffin_in_territory"].astype(int)
 
-        # Group and aggregate data within each chunk
         grouped_df = (
             df.groupby(
                 [
@@ -29,7 +27,6 @@ def summarize_results(num_simulations: int):
                     "has_prosperity",
                     "has_four_drachma_coin",
                     "has_denarius",
-                    # "deck_size",
                     "n_cycler_souls",
                     "n_tutors_in_starting_deck",
                 ]
@@ -37,23 +34,23 @@ def summarize_results(num_simulations: int):
             .agg(
                 {
                     "n_cards_drawn": "mean",
-                    "macguffin_in_territory": "mean",
+                    "macguffin_in_territory": ["sum", "count"],
                 }
             )
             .reset_index()
         )
 
-        # Convert the 'macguffin_in_territory' mean to a percentage
-        grouped_df["macguffin_in_territory"] *= 100
+        # Flatten multi-level column names if necessary
+        grouped_df.columns = [
+            "_".join(col).rstrip("_") for col in grouped_df.columns.values
+        ]
 
-        # Append the grouped data to the list
         summary_list.append(grouped_df)
 
-    # Concatenate all chunk summaries into a single DataFrame
+    # Concatenate chunk summaries
     final_summary_df = pd.concat(summary_list)
 
-    # Further group by and aggregate to account for potential overlaps between chunks
-    final_summary_df = (
+    final_aggregated_df = (
         final_summary_df.groupby(
             [
                 "going_first",
@@ -62,32 +59,41 @@ def summarize_results(num_simulations: int):
                 "has_prosperity",
                 "has_four_drachma_coin",
                 "has_denarius",
-                # "deck_size",
                 "n_cycler_souls",
                 "n_tutors_in_starting_deck",
             ]
         )
         .agg(
             {
-                "n_cards_drawn": "mean",
-                "macguffin_in_territory": "mean",
+                "n_cards_drawn_mean": "mean",
+                "macguffin_in_territory_sum": "sum",
+                "macguffin_in_territory_count": "sum",
             }
         )
         .reset_index()
     )
 
-    # Rename columns for clarity
-    final_summary_df.rename(
-        columns={
-            "n_cards_drawn": "average_n_cards_drawn",
-            "macguffin_in_territory": "percentage_macguffin_in_territory",
-        },
+    # Calculate the percentage of 'macguffin_in_territory'
+    final_aggregated_df["percentage_macguffin_in_territory"] = (
+        final_aggregated_df["macguffin_in_territory_sum"]
+        / final_aggregated_df["macguffin_in_territory_count"]
+    ) * 100
+
+    # Drop the now unnecessary columns
+    final_aggregated_df.drop(
+        columns=[
+            "macguffin_in_territory_sum",
+            "macguffin_in_territory_count",
+        ],
         inplace=True,
     )
 
-    # Define the filename to include the number of simulations for better traceability
+    # Rename and cleanup as necessary
+    final_aggregated_df.rename(
+        columns={"n_cards_drawn_mean": "average_n_cards_drawn"}, inplace=True
+    )
+
     filename_csv = f"tmp/averages_across_{num_simulations}_simulations.csv"
-    # Export the final summary to a CSV file
-    final_summary_df.to_csv(filename_csv, index=False)
+    final_aggregated_df.to_csv(filename_csv, index=False)
 
     print(f"Summary of results exported to {filename_csv}")
