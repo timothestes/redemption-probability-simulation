@@ -40,12 +40,8 @@ class Zone:
 
     def add(self, cards):
         """Add a list or single card to a given zone."""
-        if not cards:
-            # TODO: log this? This shouldn't be happening...
-            return
-        if isinstance(cards, list) or isinstance(cards, deque):
-            for card in cards:
-                self.append(card)
+        if isinstance(cards, (list, deque)):
+            self.cards.extend(cards)
         else:
             self.append(cards)
 
@@ -59,14 +55,14 @@ class Zone:
             1
             for card in self.cards
             if (not card_type or card.card_type == card_type)
-            and (not subtype or hasattr(card, "subtype") and card.subtype == subtype)
+            and (not subtype or card.subtype == subtype)
         )
 
     def remove(self, card_type: Optional[str] = None, subtype: Optional[str] = None):
         """Remove a card by type and optionally by subtype."""
         for card in list(self.cards):
             if (not card_type or card.card_type == card_type) and (
-                not subtype or hasattr(card, "subtype") and card.subtype == subtype
+                not subtype or card.subtype == subtype
             ):
                 self.cards.remove(card)
                 return card
@@ -96,11 +92,11 @@ class Zone:
             raise ValueError("At least one of card_type or subtype must be provided.")
 
         cards_to_search = (
-            list(self.cards)[:top_n] if top_n is not None else list(self.cards)
+            self.cards if top_n is None else deque(list(self.cards)[:top_n])
         )
         for card in cards_to_search:
             if (card_type and card.card_type == card_type) or (
-                subtype and hasattr(card, "subtype") and card.subtype == subtype
+                subtype and card.subtype == subtype
             ):
                 self.cards.remove(card)
                 return card
