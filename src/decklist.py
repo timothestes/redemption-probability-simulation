@@ -18,6 +18,22 @@ class Decklist:
         self.mapped_reserve_list = self._map_card_metadata(self.reserve_list)
         self._save_json("tbd2.json", self.mapped_reserve_list)
         self._save_json("tbd1.json", self.mapped_main_deck_list)
+        self.deck_size = self._get_size_of(self.mapped_main_deck_list)
+        self.reserve_size = self._get_size_of(self.mapped_reserve_list)
+        if self.deck_size < 50:
+            raise AssertionError(
+                "Please load a deck_file that contains at least 50 cards in the main deck."
+            )
+        if self.reserve_size > 10:
+            raise AssertionError(
+                "Please load a deck_file that contains 10 or less cards in the reserve"
+            )
+
+    def _get_size_of(self, card_list: dict) -> int:
+        n_cards = 0
+        for card in card_list.values():
+            n_cards += card["quantity"]
+        return n_cards
 
     @staticmethod
     def normalize_apostrophes(text):
@@ -45,7 +61,7 @@ class Decklist:
                 parts = line.split("\t", 1)
                 if len(parts) > 1:
                     card_info = {
-                        "quantity": parts[0].strip(),
+                        "quantity": int(parts[0].strip()),
                         "name": self.normalize_apostrophes(parts[1].strip()),
                     }
                     if self.has_reserve:
@@ -56,14 +72,6 @@ class Decklist:
         if len(self.main_deck_list) == 0:
             raise AssertionError(
                 "Please load a deck_file that contains at least one card in the main deck."
-            )
-        if len(self.main_deck_list) < 50:
-            raise AssertionError(
-                "Please load a deck_file that contains at least 50 cards in the main deck."
-            )
-        if len(self.reserve_list) > 10:
-            raise AssertionError(
-                "Please load a deck_file that contains 10 or less cards in the reserve"
             )
 
     def _load_card_data(self) -> dict:
@@ -80,25 +88,6 @@ class Decklist:
                 card_database[normalized_name] = row_with_lower_keys
 
         return card_database
-
-    def _calculate_brigades(self, card_details: dict) -> int:
-        """Figure out the number of brigades a certain card has based on the 'Brigade' field."""
-        brigade_string = card_details.get("brigade", "")
-        alignment = card_details.get("alignment", "")
-
-        # Check for special conditions based on the 'multi' brigade and alignment
-        if brigade_string == "multi":
-            if alignment == "good":
-                return 8
-            elif alignment == "evil":
-                return 7
-            elif alignment == "neutral":
-                return 15
-
-        if brigade_string:  # Ensure there is a brigade string
-            # Split the string by '/' and count the number of resulting parts
-            return len(brigade_string.split("/"))
-        return 0  # Return 0 if there is no brigade information
 
     def _map_card_metadata(self, card_list: list[dict]) -> dict:
         """
@@ -118,7 +107,6 @@ class Decklist:
                 # Copy the card data to avoid mutating the original data.
                 card_details = self.card_data[card_name].copy()
                 card_details["quantity"] = quantity
-                card_details["n_brigades"] = self._calculate_brigades(card_details)
                 result[card_name] = card_details
             else:
                 print(

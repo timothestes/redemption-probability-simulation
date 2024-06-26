@@ -36,6 +36,10 @@ if __name__ == "__main__":
     SpectrographSimulation.create_empty_log_file()
 
     simulation = SpectrographSimulation(
-        deck_file_path=args.deck_file_path, cycler_logic=args.cycler_logic
+        deck_file_path=args.deck_file_path,
+        n_simulations=args.n_simulations,
+        cycler_logic=args.cycler_logic,
     )
-    simulation.initialize_deck()
+    simulation.initialize_decklist()
+    simulation.run()
+    simulation.print_results()

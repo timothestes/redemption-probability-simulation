@@ -165,3 +165,4 @@ game_log*.csv
 tbd*
 decks/*
 !decks/.gitkeep
+matthew_game_log.csv
