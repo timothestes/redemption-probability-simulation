@@ -8,6 +8,11 @@ run:
 		--n_cycler_souls_to_try 0 1 2 \
 		--going_first \
 		--summarize_results
+run-spectrograph:
+	python3 -m src.spectrograph \
+		--n_simulations 10 \
+		--deck_file_path decks/test_deck.txt \
+		--cycler_logic random
 plot:
 	python3 -m src.visualization
 test:

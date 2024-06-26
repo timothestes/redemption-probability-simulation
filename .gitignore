@@ -163,3 +163,5 @@ game_log.csv
 game_log*.csv
 *card_prices.csv
 tbd*
+decks/*
+!decks/.gitkeep
