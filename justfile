@@ -13,7 +13,8 @@ run-spectrograph:
 		--n_simulations 1000000 \
 		--deck_file_path decks/test_dummy_deck.txt \
 		--cycler_logic random \
-		--account_for_crowds
+		--account_for_crowds \
+		--crowds_ineffectiveness_weight .6
 plot:
 	python3 -m src.visualization
 test:

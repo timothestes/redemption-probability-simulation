@@ -1,5 +1,6 @@
 import csv
 import os
+import random
 
 from src.constants import CYCLER_SOULS, EVIL_BRIGADES, GOOD_BRIGADES
 from src.decklist import Decklist
@@ -17,11 +18,13 @@ class SpectrographSimulation:
         n_simulations: int,
         cycler_logic: str,
         account_for_crowds: bool,
+        crowds_ineffectiveness_weight: float,
     ):
         self.deck_file_path = deck_file_path
         self.n_simulations = n_simulations
         self.cycler_logic = cycler_logic
         self.account_for_crowds = account_for_crowds
+        self.crowds_ineffectiveness_weight = crowds_ineffectiveness_weight
 
     @staticmethod
     def create_empty_log_file():
@@ -122,6 +125,8 @@ class SpectrographSimulation:
                 name='Lost Soul "Crowds" [Luke 5:15] [2016 - Local]'
             )
             > 0
+            # factor in the times matthew decks will have an answer
+            and random.random() > self.crowds_ineffectiveness_weight
         ):
             # they have hand protection. 0 brigades drawn with Matthew
             n_brigades_in_hand = 0

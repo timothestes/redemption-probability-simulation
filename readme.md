@@ -50,6 +50,8 @@ python3 -m src.spectrograph \
 
 `--account_for_crowds`: If you play the crowds lost soul in your deck, this flag will account for the games where you have the crowds lost soul in play on your first turn, preventing Matthew from drawing cards.
 
+`--crowds_ineffectiveness_weight`: A number between 0 and 1 that helps the simulation factor in the times Matthew decks will have an answer to the Crowds lost soul. The value 1 would mean that crowds would be ineffective 100% of the time (meaning it would never work), .6 would mean that crowds would ineffecive 60% of the time, etc.
+
 ## Notes:
 If running on a windows computer, you'll have to change a variable in `src/decklist.py`
 Change the `self.card_data_path` to the directory where your lackey's `carddata.txt` lives

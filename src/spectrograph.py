@@ -7,6 +7,14 @@ import argparse
 from src.spectrograph_simulation import SpectrographSimulation
 
 
+def float_between_0_and_1(value):
+    value = float(value)
+    if 0.0 <= value <= 1.0:
+        return value
+    else:
+        raise argparse.ArgumentTypeError(f"{value} is not between 0 and 1")
+
+
 def parse_args():
     """Parse command-line arguments."""
     parser = argparse.ArgumentParser(
@@ -30,6 +38,12 @@ def parse_args():
         action="store_true",
         help="If we draw the Crowds Lost Soul, have Matthew draw 0 cards.",
     )
+    parser.add_argument(
+        "--crowds_ineffectiveness_weight",
+        type=float_between_0_and_1,
+        default=0.6,
+        help="The percent of times you think Matthew decks will be able to answer the crowds lost soul. Must be a number between 0 and 1",
+    )
     parser.add_argument
     return parser.parse_args()
 
@@ -45,6 +59,7 @@ if __name__ == "__main__":
         n_simulations=args.n_simulations,
         cycler_logic=args.cycler_logic,
         account_for_crowds=args.account_for_crowds,
+        crowds_ineffectiveness_weight=args.crowds_ineffectiveness_weight,
     )
     simulation.initialize_decklist()
     simulation.run()
