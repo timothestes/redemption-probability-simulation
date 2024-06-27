@@ -11,10 +11,17 @@ MATTHEW_CSV_FILE = "matthew_game_log.csv"
 class SpectrographSimulation:
     """Class contains all information necessary to run a spectrograph simulation."""
 
-    def __init__(self, deck_file_path: str, n_simulations: int, cycler_logic: str):
+    def __init__(
+        self,
+        deck_file_path: str,
+        n_simulations: int,
+        cycler_logic: str,
+        account_for_crowds: bool,
+    ):
         self.deck_file_path = deck_file_path
         self.n_simulations = n_simulations
         self.cycler_logic = cycler_logic
+        self.account_for_crowds = account_for_crowds
 
     @staticmethod
     def create_empty_log_file():
@@ -109,9 +116,20 @@ class SpectrographSimulation:
 
     def _watch_matthew_take_a_turn(self, sim_number) -> dict:
         """Actions to take when when Matthew inevitably attacks."""
+        if (
+            self.account_for_crowds
+            and self.territory.count(
+                name='Lost Soul "Crowds" [Luke 5:15] [2016 - Local]'
+            )
+            > 0
+        ):
+            # they have hand protection. 0 brigades drawn with Matthew
+            n_brigades_in_hand = 0
+        else:
+            n_brigades_in_hand = self._count_n_brigades_in_hand()
         return {
             "sim_number": sim_number,
-            "n_cards_matthew_draw": self._count_n_brigades_in_hand(),
+            "n_cards_matthew_draw": n_brigades_in_hand,
             "deck_size": self.decklist.deck_size,
         }
 

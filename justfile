@@ -10,9 +10,10 @@ run:
 		--summarize_results
 run-spectrograph:
 	python3 -m src.spectrograph \
-		--n_simulations 100 \
+		--n_simulations 1000000 \
 		--deck_file_path decks/test_dummy_deck.txt \
-		--cycler_logic random
+		--cycler_logic random \
+		--account_for_crowds
 plot:
 	python3 -m src.visualization
 test:

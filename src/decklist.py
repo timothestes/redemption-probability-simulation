@@ -132,6 +132,9 @@ class Decklist:
                 return ["Green", "White", "Brown", "Crimson"]
             elif card_name == "Scapegoat (PoC)":
                 return ["Teal", "Green", "Crimson"]
+            if "and" in brigade:
+                brigade = brigade.split("and")
+                return brigade[0].strip().split("/")
             if "(" in brigade:
                 main_brigade, sub_brigades = brigade.split(" (")
                 sub_brigades = sub_brigades.rstrip(")").split("/")
@@ -142,9 +145,6 @@ class Decklist:
                 return main_brigade + sub_brigades
             elif "/" in brigade:
                 return brigade.split("/")
-            elif "and" in brigade:
-                brigade = brigade.split("and")
-                return brigade[0].strip().split("/")
             else:
                 return [brigade]
 
@@ -190,9 +190,11 @@ class Decklist:
 
         # Add assertions
         allowed_brigades = set(
-            GOOD_BRIGADES + EVIL_BRIGADES + ["Good Multi", "Evil Multi"]
+            GOOD_BRIGADES + EVIL_BRIGADES + ["Good Multi", "Evil Multi", ""]
         )
         for brigade in brigades_list:
-            assert brigade in allowed_brigades, f"Invalid brigade: {brigade}"
+            assert (
+                brigade in allowed_brigades
+            ), f"Card {card_name} has an invalid brigade: {brigade}."
 
         return brigades_list

@@ -25,6 +25,11 @@ def parse_args():
         default="random",
         help="If flag specified, controls the behavior of the cylcer souls. Setting to underdeck_colors will attempt to underdeck the cards in your hand that have the most colors.",
     )
+    parser.add_argument(
+        "--account_for_crowds",
+        action="store_true",
+        help="If we draw the Crowds Lost Soul, have Matthew draw 0 cards.",
+    )
     parser.add_argument
     return parser.parse_args()
 
@@ -39,6 +44,7 @@ if __name__ == "__main__":
         deck_file_path=args.deck_file_path,
         n_simulations=args.n_simulations,
         cycler_logic=args.cycler_logic,
+        account_for_crowds=args.account_for_crowds,
     )
     simulation.initialize_decklist()
     simulation.run()
