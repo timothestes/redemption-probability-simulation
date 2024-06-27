@@ -1,17 +1,10 @@
 import csv
 import os
 
+from src.constants import CYCLER_SOULS, EVIL_BRIGADES, GOOD_BRIGADES
 from src.decklist import Decklist
 from src.models_v2 import Deck, Discard, Hand, Territory
 
-CYCLER_SOULS = [
-    'Lost Soul "Shepherds" [I Samuel 25:7 - L]',
-    'Lost Soul "Shepherds" [I Samuel 25:7] [1st Print - L]',
-    'Lost Soul "Grumbled" [Exodus 15:24 - K]'
-    'Lost Soul "Grumbled" [Exodus 15:24] [1st Print - K]',
-]
-GOOD_BRIGADES = ["Gold", "Red", "Silver", "Teal", "White", "Green", "Purple", "Blue"]
-EVIL_BRIGADES = ["Brown", "Gold", "Crimson", "Black", "Gray", "Orange", "Pale Green"]
 MATTHEW_CSV_FILE = "matthew_game_log.csv"
 
 
@@ -118,27 +111,28 @@ class SpectrographSimulation:
         """Actions to take when when Matthew inevitably attacks."""
         return {
             "sim_number": sim_number,
-            "n_cards_matthew_draw": self._calculate_n_brigades_in_hand(),
+            "n_cards_matthew_draw": self._count_n_brigades_in_hand(),
             "deck_size": self.decklist.deck_size,
         }
 
-    def _calculate_n_brigades_in_hand(self) -> int:
+    def _count_n_brigades_in_hand(self) -> int:
         """
         Count the number of unique brigades in hand, handling 'multi' brigade specially.
         """
         brigades = set()
         for card in self.hand.cards:
-            if card.brigade == "Multi" and card.alignment == "Good":
-                brigades.update(GOOD_BRIGADES)
-            elif card.brigade == "Multi" and card.alignment == "Evil":
-                brigades.update(EVIL_BRIGADES)
-            elif card.brigade == "Multi" and card.alignment == "Neutral":
-                brigades.update(GOOD_BRIGADES)
-                brigades.update(EVIL_BRIGADES)
-            else:
-                brigades.update(card.brigades_list)
+            brigades.update(card.brigade)
 
-        return len(brigades)
+        expanded_brigades = set()
+        for brigade in brigades:
+            if brigade == "Good Multi":
+                expanded_brigades.update(GOOD_BRIGADES)
+            elif brigade == "Evil Multi":
+                expanded_brigades.update(EVIL_BRIGADES)
+            else:
+                expanded_brigades.add(brigade)
+
+        return len(expanded_brigades)
 
     @staticmethod
     def append_log_to_file(log_data: list[dict], csv_file: str):

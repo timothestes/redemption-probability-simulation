@@ -13,12 +13,11 @@ from src.decklist import Decklist
 
 
 class Card:
-    def __init__(self, name: str, type: str, brigade: str, alignment: str, **kwargs):
+    def __init__(self, name: str, type: str, brigade: list, alignment: str, **kwargs):
         self.name = name
         self.type = type
         self.brigade = brigade
         self.alignment = alignment
-        self.brigades_list = self.brigade.split("/") if self.brigade else []
         # self.__dict__.update(kwargs)  # Update instance with any additional kwargs
 
     def __str__(self):

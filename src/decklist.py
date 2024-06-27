@@ -1,5 +1,7 @@
 import csv
 
+from src.constants import EVIL_BRIGADES, GOOD_BRIGADES
+
 
 class Decklist:
 
@@ -107,6 +109,8 @@ class Decklist:
                 # Copy the card data to avoid mutating the original data.
                 card_details = self.card_data[card_name].copy()
                 card_details["quantity"] = quantity
+                # brigade normalization
+                card_details["brigade"] = self._normalize_brigade_field(card_details)
                 result[card_name] = card_details
             else:
                 print(
@@ -114,3 +118,81 @@ class Decklist:
                 )
 
         return result
+
+    def _normalize_brigade_field(self, card_details: dict) -> list:
+        """Turn the brigades field into a list, handle good and evil gold."""
+        brigade: str = card_details.get("brigade", "")
+        alignment = card_details.get("alignment", "")
+        card_name = card_details["name"]
+
+        def handle_complex_brigades(brigade: str) -> list:
+            if card_name == "Delivered":
+                return ["Green", "Teal", "Evil Gold", "Pale Green"]
+            elif card_name == "Eternal Judgment":
+                return ["Green", "White", "Brown", "Crimson"]
+            elif card_name == "Scapegoat (PoC)":
+                return ["Teal", "Green", "Crimson"]
+            if "(" in brigade:
+                main_brigade, sub_brigades = brigade.split(" (")
+                sub_brigades = sub_brigades.rstrip(")").split("/")
+                if "/" in main_brigade:
+                    main_brigade = main_brigade.strip().split("/")
+                else:
+                    main_brigade = [main_brigade]
+                return main_brigade + sub_brigades
+            elif "/" in brigade:
+                return brigade.split("/")
+            elif "and" in brigade:
+                brigade = brigade.split("and")
+                return brigade[0].strip().split("/")
+            else:
+                return [brigade]
+
+        brigades_list = handle_complex_brigades(brigade)
+
+        def replace_gold(brigades, replacement):
+            return [replacement if b == "Gold" else b for b in brigades]
+
+        def replace_multi(brigades, replacement):
+            return [replacement if b == "Multi" else b for b in brigades]
+
+        if "Multi" in brigades_list:
+            if card_name == "Saul/Paul":
+                brigades_list = ["Gray", "Good Multi"]
+            elif alignment == "Good":
+                brigades_list = replace_multi(brigades_list, "Good Multi")
+            elif alignment == "Evil":
+                brigades_list = replace_multi(brigades_list, "Evil Multi")
+            # add handling for exceptions
+            elif (
+                alignment == "Neutral"
+                and card_name == "Unified Language"
+                or card_name == "Philosophy"
+            ):
+                brigades_list = ["Good Multi", "Evil Multi"]
+            elif alignment == "Neutral":
+                brigades_list = replace_multi(brigades_list, "Good Multi")
+
+        if "Gold" in brigades_list:
+            if alignment == "Good":
+                brigades_list = replace_gold(brigades_list, "Good Gold")
+            elif alignment == "Evil":
+                brigades_list = replace_gold(brigades_list, "Evil Gold")
+            elif alignment == "Neutral":
+                if brigades_list[0] == "Gold" or card_name in [
+                    "Fire Foxes",
+                    "First Bowl of Wrath (RoJ)",
+                    "Banks of the Nile/Pharaoh's Court",
+                ]:
+                    brigades_list = replace_gold(brigades_list, "Good Gold")
+                else:
+                    brigades_list = replace_gold(brigades_list, "Evil Gold")
+
+        # Add assertions
+        allowed_brigades = set(
+            GOOD_BRIGADES + EVIL_BRIGADES + ["Good Multi", "Evil Multi"]
+        )
+        for brigade in brigades_list:
+            assert brigade in allowed_brigades, f"Invalid brigade: {brigade}"
+
+        return brigades_list
