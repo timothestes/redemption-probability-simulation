@@ -24,3 +24,18 @@ EVIL_BRIGADES = [
     "Orange",
     "Pale Green",
 ]
+HOPPERS = [
+    'Lost Soul "Hopper" [II Chronicles 28:13 - LR]',
+    'Lost Soul "Hopper" [II Chronicles 28:13 - Fundraiser]',
+    'Lost Soul "Hopper" [II Chronicles 28:13 - RR]',
+]
+LAWLESS = [
+    'Lost Soul "Lawless" [Hebrews 12:8] [2021 - 1st Place]',
+    'Lost Soul "Lawless" [Hebrews 12:8] [AB - CoW]',
+    'Lost Soul "Lawless" [Hebrews 12:8]',
+]
+DARKNESS = [
+    'Lost Soul "Darkness" [Job 30:26]  [AB - RoJ]',
+    'Lost Soul "Darkness" [Job 30:26]',
+    'Lost Soul "Darkness" [Job 30:26] [2019 - 1st Place]',
+]

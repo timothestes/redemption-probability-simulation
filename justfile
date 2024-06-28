@@ -10,11 +10,11 @@ run:
 		--summarize_results
 run-spectrograph:
 	python3 -m src.spectrograph \
-		--n_simulations 1000000 \
+		--n_simulations 100000 \
 		--deck_file_path decks/test_dummy_deck.txt \
 		--cycler_logic random \
-		--account_for_crowds \
-		--crowds_ineffectiveness_weight .6
+		--crowds_ineffectiveness_weight .6 \
+		--matthew_fizzle_rate .15
 plot:
 	python3 -m src.visualization
 test:

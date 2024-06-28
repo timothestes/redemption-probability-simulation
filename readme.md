@@ -40,7 +40,8 @@ sh config.sh
 python3 -m src.spectrograph \
     --n_simulations 100000 \
     --deck_file_path decks/test_dummy_deck.txt \
-    --account_for_crowds
+    --crowds_ineffectiveness_weight .6 \
+    --matthew_fizzle_rate .15
 ```
 
 ## Command-Line Arguments
@@ -48,9 +49,9 @@ python3 -m src.spectrograph \
 
 `--deck_file_path`: The path to where your Redemption decklist is at.
 
-`--account_for_crowds`: If you play the crowds lost soul in your deck, this flag will account for the games where you have the crowds lost soul in play on your first turn, preventing Matthew from drawing cards.
+`--crowds_ineffectiveness_weight`: A number between 0 and 1 that helps the simulation factor in the times Matthew decks will have an answer to the Crowds lost soul. The value 1 would mean that crowds would be ineffective 100% of the time (meaning it would never work), .6 would mean that crowds would ineffecive 60% of the time, etc. Defaults to .6. If you aren't playing Crowds lost soul in your deck, this number has no effect on the simulation. 
 
-`--crowds_ineffectiveness_weight`: A number between 0 and 1 that helps the simulation factor in the times Matthew decks will have an answer to the Crowds lost soul. The value 1 would mean that crowds would be ineffective 100% of the time (meaning it would never work), .6 would mean that crowds would ineffecive 60% of the time, etc.
+`--matthew_fizzle_rate`: A number between 0 and 1 that helps the simulation factor in the times Matthew decks will not have a Matthew on Turn 1. The value 1 would mean that they would would not have Matthew Turn 1 100% of the time, .6 would mean that they don't have Matthew 60% of the time, etc. Defaults to .15 (they fizzle only 15% of the time)
 
 ## Notes:
 If running on a windows computer, you'll have to change a variable in `src/decklist.py`

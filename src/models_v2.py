@@ -64,9 +64,17 @@ class Zone:
         """Remove a card by name or type."""
         if not name and not type:
             raise ValueError("At least one of name or type must be provided.")
+        if name and type:
+            raise ValueError("Please provide only one input: name OR type.")
 
         for card in self.cards:
-            if (not name or card.type == name) and (not type or card.type == type):
+            if type == "RandomNonLostSoul" and card.type != "Lost Soul":
+                self.cards.remove(card)
+                return card
+            elif name and card.name == name:
+                self.cards.remove(card)
+                return card
+            elif type and card.type == type:
                 self.cards.remove(card)
                 return card
         return None
@@ -93,10 +101,10 @@ class Zone:
         # Ensure at least one of name or type is provided
         if not name and not type:
             raise ValueError("At least one of name or type must be provided.")
+        if name and type:
+            raise ValueError("Please provide only one input: name OR type.")
 
-        cards_to_search = (
-            self.cards if top_n is None else list(list(self.cards)[:top_n])
-        )
+        cards_to_search = self.cards if top_n is None else self.cards[:top_n]
         for card in cards_to_search:
             if (name and card.name == name) or (type and card.type == type):
                 self.cards.remove(card)

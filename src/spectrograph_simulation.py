@@ -2,7 +2,7 @@ import csv
 import os
 import random
 
-from src.constants import CYCLER_SOULS, EVIL_BRIGADES, GOOD_BRIGADES
+from src.constants import CYCLER_SOULS, DARKNESS, EVIL_BRIGADES, GOOD_BRIGADES, LAWLESS
 from src.decklist import Decklist
 from src.models_v2 import Deck, Discard, Hand, Territory
 
@@ -17,14 +17,14 @@ class SpectrographSimulation:
         deck_file_path: str,
         n_simulations: int,
         cycler_logic: str,
-        account_for_crowds: bool,
         crowds_ineffectiveness_weight: float,
+        matthew_fizzle_rate: float,
     ):
         self.deck_file_path = deck_file_path
         self.n_simulations = n_simulations
         self.cycler_logic = cycler_logic
-        self.account_for_crowds = account_for_crowds
         self.crowds_ineffectiveness_weight = crowds_ineffectiveness_weight
+        self.matthew_fizzle_rate = matthew_fizzle_rate
 
     @staticmethod
     def create_empty_log_file():
@@ -42,24 +42,23 @@ class SpectrographSimulation:
     def initialize_decklist(self):
         """Load the deck in."""
         self.decklist = self._load_raw_deck(self.deck_file_path)
-        self._set_flags(self.decklist)
         self.deck = Deck.load_decklist(self.decklist)
         self.territory = Territory(cards=[])
         self.discard = Discard(cards=[])
         self.hand = Hand(cards=[])
-        self.hopper = False
-        self.virgin_birth = False
-        self.prosperity = False
-        # self.four_drachma_coin = False
-        # self.denarius = False
         # this makes it so that the simulation keeps 8 cards in hand.
-        self.going_first = True
+        self._set_flags(self.decklist)
 
     def _set_flags(self, decklist: Decklist):
         """Set some flags that might be useful later."""
+        self.going_first = True
+        self.virgin_birth = False
+        self.crowds = False
         for card in decklist.mapped_main_deck_list:
             if card == "Virgin Birth":
                 self.virgin_birth = True
+            if card == 'Lost Soul "Crowds" [Luke 5:15] [2016 - Local]':
+                self.crowds = True
 
     @staticmethod
     def _load_raw_deck(deck_file_path: str) -> Decklist:
@@ -109,18 +108,56 @@ class SpectrographSimulation:
                 self.hand.add(self.deck.draw_n(1))
 
             if lost_soul.name in CYCLER_SOULS:
-                # randomly choose a card to underdeck
-                self.deck.bottom_cards([self.hand.remove(type="RandomNonLostSoul")])
-                self.hand.add(self.deck.draw_n(1))
+                self._resolve_cycler()
             elif lost_soul.name == 'Lost Soul "Prosperity" [Deuteronomy 30:15]':
-                # randomly choose a card to discard
-                self.discard.add(self.hand.remove(type="RandomNonLostSoul"))
-                self.hand.add(self.deck.draw_n(2))
+                self._resolve_prosperity()
+            elif lost_soul.name in DARKNESS:
+                self._resolve_darkness()
+            elif lost_soul.name in LAWLESS:
+                self._resolve_lawless()
+
+    def _resolve_darkness(self):
+        """Randomly choose an evil character from deck and add it to hand"""
+        # TODO: Logic currently cannot get dual-alignment evil characters
+        evil_character = self.deck.search_for(type="Evil Character")
+        if evil_character:
+            self.hand.add(evil_character)
+
+    def _resolve_prosperity(self):
+        """Discard a card and draw 2 cards."""
+        self.discard.add(self.hand.remove(type="RandomNonLostSoul"))
+        self.hand.add(self.deck.draw_n(2))
+
+    def _resolve_cycler(self):
+        """Underdeck a random card and draw a card."""
+        self.deck.bottom_cards([self.hand.remove(type="RandomNonLostSoul")])
+        self.hand.add(self.deck.draw_n(1))
+
+    def _resolve_lawless(self):
+        """Reveal top 6, put lost souls in play, and grab an evil card."""
+        top_six = self.deck.draw_n(6)
+        got_evil = False
+        for i, card in enumerate(top_six):
+            if card.type == "Lost Soul":
+                self.territory.add(top_six.pop(i))
+                if card.name in CYCLER_SOULS:
+                    self._resolve_cycler()
+            elif not got_evil and card.alignment == "Evil":
+                # TODO: Logic can't currently grab three woes or other "evil" neutral cards...
+                self.hand.add(top_six.pop(i))
+                got_evil = True
+        # underdeck the rest
+        self.deck.bottom_cards(top_six)
 
     def _watch_matthew_take_a_turn(self, sim_number) -> dict:
         """Actions to take when when Matthew inevitably attacks."""
-        if (
-            self.account_for_crowds
+        if random.random() < self.matthew_fizzle_rate:
+            # matthew deck fizzled
+            n_brigades_in_hand = 0
+        # crowds lost soul logic
+        elif (
+            self.crowds
+            # if we drew crowds
             and self.territory.count(
                 name='Lost Soul "Crowds" [Luke 5:15] [2016 - Local]'
             )
@@ -128,7 +165,7 @@ class SpectrographSimulation:
             # factor in the times matthew decks will have an answer
             and random.random() > self.crowds_ineffectiveness_weight
         ):
-            # they have hand protection. 0 brigades drawn with Matthew
+            # we have hand protection. 0 brigades drawn with Matthew
             n_brigades_in_hand = 0
         else:
             n_brigades_in_hand = self._count_n_brigades_in_hand()
