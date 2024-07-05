@@ -132,6 +132,35 @@ class Decklist:
                 return ["Green", "White", "Brown", "Crimson"]
             elif card_name == "Scapegoat (PoC)":
                 return ["Teal", "Green", "Crimson"]
+            elif card_name == "Zion":
+                return ["Purple"]
+            elif card_name == "Ashkelon":
+                return ["Good Gold"]
+            elif card_name == "Raamses":
+                return ["White"]
+            elif card_name == "Babel":
+                return ["Blue"]
+            elif card_name == "Sodom & Gomorrah":
+                return ["Silver"]
+            elif card_name == "City of Enoch":
+                return ["Blue"]
+            elif card_name == "Hebron":
+                return ["Red"]
+            elif card_name in ["Damascus (LoC)", "Damascus (Promo)"]:
+                return ["Red"]
+            elif card_name == "Bethlehem (Promo)":
+                return ["White"]
+            elif card_name == "Samaria":
+                return ["Green"]
+            elif card_name == "Ninevah":
+                return ["Green"]
+            elif card_name == "City of Refuge":
+                return ["Teal"]
+            elif card_name == "Jerusalem (GoC)":
+                return ["Purple", "Good Gold", "White"]
+            elif card_name == "Sychar (GoC)":
+                return ["Good Gold", "Purple"]
+
             if "and" in brigade:
                 brigade = brigade.split("and")
                 return brigade[0].strip().split("/")
