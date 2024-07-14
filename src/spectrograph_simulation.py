@@ -181,7 +181,9 @@ class SpectrographSimulation:
         """
         brigades = set()
         for card in self.hand.cards:
-            brigades.update(card.brigade)
+            # add handling for doubt
+            if card.name != ("Doubt (LoC Plus)" or "Doubt (LoC)"):
+                brigades.update(card.brigade)
 
         expanded_brigades = set()
         for brigade in brigades:
