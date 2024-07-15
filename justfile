@@ -12,7 +12,7 @@ run-spectrograph:
 	python3 -m src.spectrograph \
 		--n_simulations 100000 \
 		--deck_file_path decks/test_dummy_deck.txt \
-		--cycler_logic random \
+		--cycler_logic optimized \
 		--crowds_ineffectiveness_weight .6 \
 		--matthew_fizzle_rate .15
 plot:

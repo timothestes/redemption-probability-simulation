@@ -92,7 +92,8 @@ class SpectrographSimulation:
                     if card.name == "Virgin Birth":
                         # replace virgin birth with a card from the top 6
                         drawn_cards[i] = self.deck.resolve_the_virgin_birth(
-                            drawn_cards[i]
+                            drawn_cards[i],
+                            self.cycler_logic,
                         )
 
         self.hand.add(drawn_cards)
@@ -125,12 +126,19 @@ class SpectrographSimulation:
 
     def _resolve_prosperity(self):
         """Discard a card and draw 2 cards."""
-        self.discard.add(self.hand.remove(type="RandomNonLostSoul"))
+        if self.cycler_logic == "optimized":
+            self.discard.add(self.hand.remove(type="MostBrigades"))
+        else:
+            self.discard.add(self.hand.remove(type="RandomNonLostSoul"))
         self.hand.add(self.deck.draw_n(2))
 
     def _resolve_cycler(self):
         """Underdeck a random card and draw a card."""
-        self.deck.bottom_cards([self.hand.remove(type="RandomNonLostSoul")])
+        if self.cycler_logic == "optimized":
+            self.deck.bottom_cards([self.hand.remove(type="MostBrigades")])
+        else:
+            self.deck.bottom_cards([self.hand.remove(type="RandomNonLostSoul")])
+
         self.hand.add(self.deck.draw_n(1))
 
     def _resolve_lawless(self):

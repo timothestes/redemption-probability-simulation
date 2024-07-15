@@ -9,6 +9,7 @@ and behavior of various components within a card game simulation.
 import random
 from typing import List, Optional
 
+from src.constants import EVIL_BRIGADES, GOOD_BRIGADES
 from src.decklist import Decklist
 
 
@@ -60,12 +61,36 @@ class Zone:
             if (not name or card.name == name) and (not type or card.type == type)
         )
 
+    def count_actual_brigades(self, brigades) -> int:
+        count = 0
+        for brigade in brigades:
+            if brigade == "Good Multi":
+                count += len(GOOD_BRIGADES)
+            elif brigade == "Evil Multi":
+                count += len(EVIL_BRIGADES)
+            else:
+                count += 1
+        return count
+
     def remove(self, name: Optional[str] = None, type: Optional[str] = None):
         """Remove a card by name or type."""
         if not name and not type:
             raise ValueError("At least one of name or type must be provided.")
         if name and type:
             raise ValueError("Please provide only one input: name OR type.")
+
+        if type == "MostBrigades":
+            non_lost_soul_cards = [
+                card for card in self.cards if card.type != "Lost Soul"
+            ]
+            max_brigades_card = max(
+                non_lost_soul_cards,
+                key=lambda card: self.count_actual_brigades(card.brigade),
+                default=None,
+            )
+            if max_brigades_card:
+                self.cards.remove(max_brigades_card)
+                return max_brigades_card
 
         for card in self.cards:
             if type == "RandomNonLostSoul" and card.type != "Lost Soul":
@@ -191,11 +216,29 @@ class Deck(Zone):
         """Return the number of cards left in deck"""
         return len(self.cards)
 
-    def resolve_the_virgin_birth(self, virgin_birth_card: Card) -> Card:
+    def resolve_the_virgin_birth(
+        self, virgin_birth_card: Card, cycler_logic: str
+    ) -> Card:
         """Look at the top six cards of deck. Grab one, and bottom virgin_birth."""
         top_six_cards = self.draw_n(6)
-        # TODO: update this logic to not just get the first card
-        card_gotten_with_virgin_birth = top_six_cards.pop(0)
+        card_gotten_with_virgin_birth = None
+
+        if cycler_logic == "optimized":
+            non_lost_soul_cards = [
+                card for card in top_six_cards if card.type != "Lost Soul"
+            ]
+            if non_lost_soul_cards:
+                card_gotten_with_virgin_birth = min(
+                    non_lost_soul_cards,
+                    key=lambda card: self.count_actual_brigades(card.brigade),
+                )
+                top_six_cards.remove(card_gotten_with_virgin_birth)
+            else:
+                lost_soul_card = random.choice(top_six_cards)
+                card_gotten_with_virgin_birth = lost_soul_card
+                top_six_cards.remove(lost_soul_card)
+        else:
+            card_gotten_with_virgin_birth = top_six_cards.pop(0)
 
         # Put the remaining cards back on top and the virgin_birth_card at the bottom
         self.top_cards(top_six_cards)

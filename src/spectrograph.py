@@ -31,7 +31,7 @@ def parse_args():
     parser.add_argument(
         "--cycler_logic",
         default="random",
-        help="If flag specified, controls the behavior of the cylcer souls. Setting to underdeck_colors will attempt to underdeck the cards in your hand that have the most colors.",
+        help="If flag specified, controls the behavior of the cylcer souls. Setting to underdeck_colors will attempt to underdeck the cards in your hand that have the most colors. Also 'improves' choosing logic for Prosperity and Virgin Birth.",
     )
     parser.add_argument(
         "--crowds_ineffectiveness_weight",

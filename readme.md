@@ -51,6 +51,8 @@ python3 -m src.spectrograph \
 
 `--crowds_ineffectiveness_weight`: A number between 0 and 1 that helps the simulation factor in the times Matthew decks will have an answer to the Crowds lost soul. The value 1 would mean that crowds would be ineffective 100% of the time (meaning it would never work), .6 would mean that crowds would ineffecive 60% of the time, etc. Defaults to .6. If you aren't playing Crowds lost soul in your deck, this number has no effect on the simulation. 
 
+`--cycler_logic`: Determines the logic for resolving the Cycler Souls, Prosperity, and Virgin Birth cards. Can be set to `random` or `optimized`. Defaults to `random`. Optimized will underdeck/discard cards with the most brigades.
+
 `--matthew_fizzle_rate`: A number between 0 and 1 that helps the simulation factor in the times Matthew decks will not have a Matthew on Turn 1. The value 1 would mean that they would would not have Matthew Turn 1 100% of the time, .6 would mean that they don't have Matthew 60% of the time, etc. Defaults to .15 (they fizzle only 15% of the time)
 
 ## Notes:
