@@ -364,9 +364,9 @@ class SpectrographSimulation:
             four_drachma_percentage = (four_drachma_count / total_rows) * 100
             whiff_percentage = (whiff_count / total_rows) * 100
 
-            print(f"Average number of cards Matthew drew: {average_matthew_drew:.4f}")
-            print(f"Percentage of Denarius draws: {denarius_percentage:.4f}%")
-            print(f"Percentage of Four-Drachma draws: {four_drachma_percentage:.4f}%")
-            print(f"Percentage of whiffs on heroes: {whiff_percentage:.4f}%")
+            print(f"Average number of cards Matthew drew: {average_matthew_drew:.2f}")
+            print(f"Percentage of Denarius draws: {denarius_percentage:.2f}%")
+            print(f"Percentage of Four-Drachma draws: {four_drachma_percentage:.2f}%")
+            print(f"Percentage of whiffs on heroes: {whiff_percentage:.2f}%")
         else:
             print("No valid data found")
