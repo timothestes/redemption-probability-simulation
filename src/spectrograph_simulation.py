@@ -33,6 +33,10 @@ class SpectrographSimulation:
             "sim_number",
             "n_cards_matthew_drew",
             "deck_size",
+            "cards_in_hand",
+            "denarius_draw",
+            "four_drachman_draw",
+            "whiff_on_heroes",
         ]
 
         with open(MATTHEW_CSV_FILE, "w", newline="", encoding="utf-8") as f:
@@ -47,18 +51,24 @@ class SpectrographSimulation:
         self.discard = Discard(cards=[])
         self.hand = Hand(cards=[])
         # this makes it so that the simulation keeps 8 cards in hand.
-        self._set_flags(self.decklist)
+        self._set_deck_flags(self.decklist)
 
-    def _set_flags(self, decklist: Decklist):
+    def _set_deck_flags(self, decklist: Decklist):
         """Set some flags that might be useful later."""
         self.going_first = True
         self.virgin_birth = False
         self.crowds = False
+        self.denarius = False
+        self.four_drachma = False
         for card in decklist.mapped_main_deck_list:
             if card == "Virgin Birth":
                 self.virgin_birth = True
-            if card == 'Lost Soul "Crowds" [Luke 5:15] [2016 - Local]':
+            elif card == 'Lost Soul "Crowds" [Luke 5:15] [2016 - Local]':
                 self.crowds = True
+            elif card == "Denarius (I/J+)":
+                self.denarius = True
+            elif card == "Four-Drachma Coin (GoC)":
+                self.four_drachma = True
 
     @staticmethod
     def _load_raw_deck(deck_file_path: str) -> Decklist:
@@ -157,7 +167,7 @@ class SpectrographSimulation:
         # underdeck the rest
         self.deck.bottom_cards(top_six)
 
-    def _watch_matthew_take_a_turn(self, sim_number) -> dict:
+    def _calculate_matthew_count(self, sim_number) -> dict:
         """Actions to take when when Matthew inevitably attacks."""
         if random.random() < self.matthew_fizzle_rate:
             # matthew deck fizzled
@@ -182,6 +192,97 @@ class SpectrographSimulation:
             "n_cards_matthew_draw": n_brigades_in_hand,
             "deck_size": self.decklist.deck_size,
         }
+
+    def _play_denarius(self, denarius_from_deck=False):
+        """Play Denarius, search for an Emperor, then draw 3 cards."""
+        self.artifact_slot_used_for_turn = True
+        source = self.deck if denarius_from_deck else self.hand
+        self.territory.add(source.remove(name="Denarius (I/J+)"))
+
+        emperor = self.deck.search_for(tags="is_emperor") or self.hand.search_for(
+            tags="is_emperor"
+        )
+        if emperor:
+            self.territory.add(emperor)
+
+        if self.territory.search_for(tags="is_emperor"):
+            self.output["denarius_draw"] = True
+            self._draw_cards(n_cards=3, resolve_stars=False)
+
+    def _play_peter_and_coin(self, coin_from_deck=False):
+        """Play Simon Peter and 4 Drachma Coin, then draw 4 cards."""
+        source = self.deck if coin_from_deck else self.hand
+        self.territory.add(source.remove(name="Four-Drachma Coin (GoC)"))
+        self.territory.add(self.hand.remove(name="Simon Peter / Peter, the Rock (GoC)"))
+        self.output["four_drachman_draw"] = True
+        self._draw_cards(n_cards=4)
+
+    def _play_delivered(self):
+        """Try to use Delivered to get 4-drachma coin or Denarius out."""
+        if (
+            self.four_drachma
+            and not self.output["four_drachman_draw"]
+            and self.hand.count(name="Simon Peter / Peter, the Rock (GoC)") > 0
+            and self.deck.count(name="Four-Drachma Coin (GoC)") > 0
+        ):
+            self.discard.add(self.hand.remove(name="Delivered"))
+            self._play_peter_and_coin(coin_from_deck=True)
+        elif (
+            self.denarius
+            and not self.output["denarius_draw"]
+            and self.deck.count(name="Denarius (I/J+)") > 0
+        ):
+            self.discard.add(self.hand.remove(name="Delivered"))
+            self._play_denarius(denarius_from_deck=True)
+
+    def _take_solitaire_turn(self) -> dict:
+        """Take a turn, trying to 'combo' off"""
+        self.territory_class_for_turn = False
+        self.artifact_slot_used_for_turn = False
+        self.output = {
+            "cards_in_hand": None,
+            "denarius_draw": False,
+            "four_drachman_draw": False,
+            "whiff_on_heroes": False,
+        }
+
+        def check_and_play():
+            if (
+                self.hand.count(name="Denarius (I/J+)") > 0
+                and not self.artifact_slot_used_for_turn
+            ):
+                self._play_denarius()
+            if (
+                self.hand.count(name="Four-Drachma Coin (GoC)") > 0
+                and self.hand.count(name="Simon Peter / Peter, the Rock (GoC)") > 0
+            ):
+                self._play_peter_and_coin()
+            if (
+                self.hand.count(name="Delivered")
+                and not self.territory_class_for_turn
+                and (
+                    self.hand._search_for_brigades(
+                        brigades=["Teal", "Green", "Evil Gold", "Pale Green"]
+                    )
+                    or self.territory._search_for_brigades(
+                        brigades=["Teal", "Green", "Evil Gold", "Pale Green"]
+                    )
+                )
+            ):
+                self._play_delivered()
+
+        # Initial check to play cards
+        check_and_play()
+
+        # After initial draw, check again
+        if self.output["denarius_draw"] or self.output["four_drachman_draw"]:
+            check_and_play()
+
+        # Check for 0 heroes
+        if self.hand.count(type="Hero") == 0 and self.territory.count(type="Hero") == 0:
+            self.output["whiff_on_heroes"] = True
+
+        return self.output
 
     def _count_n_brigades_in_hand(self) -> int:
         """
@@ -211,7 +312,7 @@ class SpectrographSimulation:
             writer = csv.DictWriter(f, fieldnames=log_data[0].keys())
             writer.writerows(log_data)
 
-    def run(self):
+    def run(self, **kwargs):
         """Simulate N games of Redemption by drawing 8 cards from a deck."""
         all_logs = []  # Collect all logs to write in bulk
         for sim_number in range(self.n_simulations):
@@ -220,8 +321,13 @@ class SpectrographSimulation:
             # draw 8 cards from deck
             self._draw_cards(n_cards=8, resolve_stars=True)
 
-            # watch matthew take a turn
-            turn_log = self._watch_matthew_take_a_turn(sim_number)
+            # count n_brigades from matthew
+            turn_log = self._calculate_matthew_count(sim_number)
+
+            if "only_matthew_results" not in kwargs:
+                # take a solitaire turn
+                additional_information = self._take_solitaire_turn()
+                turn_log.update(additional_information)
 
             # Collect logs
             all_logs.append(turn_log)
@@ -231,21 +337,36 @@ class SpectrographSimulation:
 
     def print_results(self):
         """Print the summary statistics of the simulation."""
-        column_sum = 0
+        matthew_column_sum = 0
         total_rows = 0
+        denarius_count = 0
+        four_drachma_count = 0
+        whiff_count = 0
 
-        # Calculate average of the 'n_cards_matthew_drew' column
         with open(MATTHEW_CSV_FILE, "r") as csv_file:
             csv_reader = csv.DictReader(csv_file)
             for row in csv_reader:
                 try:
-                    column_sum += float(row["n_cards_matthew_drew"])
+                    matthew_column_sum += float(row["n_cards_matthew_drew"])
+                    denarius_count += 1 if row["denarius_draw"] == "True" else 0
+                    four_drachma_count += (
+                        1 if row["four_drachman_draw"] == "True" else 0
+                    )
+                    whiff_count += 1 if row["whiff_on_heroes"] == "True" else 0
                     total_rows += 1
-                except (ValueError, KeyError):
+                except (ValueError, KeyError) as e:
+                    print(e)
                     continue  # Handle non-numeric values or missing keys
 
         if total_rows > 0:
-            average_second_column = column_sum / total_rows
-            print(f"Average number of cards Matthew drew: {average_second_column}")
+            average_matthew_drew = matthew_column_sum / total_rows
+            denarius_percentage = (denarius_count / total_rows) * 100
+            four_drachma_percentage = (four_drachma_count / total_rows) * 100
+            whiff_percentage = (whiff_count / total_rows) * 100
+
+            print(f"Average number of cards Matthew drew: {average_matthew_drew:.4f}")
+            print(f"Percentage of Denarius draws: {denarius_percentage:.4f}%")
+            print(f"Percentage of Four-Drachma draws: {four_drachma_percentage:.4f}%")
+            print(f"Percentage of whiffs on heroes: {whiff_percentage:.4f}%")
         else:
             print("No valid data found")

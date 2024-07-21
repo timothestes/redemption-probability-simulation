@@ -1,6 +1,6 @@
 import csv
 
-from src.constants import EVIL_BRIGADES, GOOD_BRIGADES
+from src.constants import EMPERORS, EVIL_BRIGADES, GOOD_BRIGADES
 
 
 class Decklist:
@@ -111,6 +111,8 @@ class Decklist:
                 card_details["quantity"] = quantity
                 # brigade normalization
                 card_details["brigade"] = self._normalize_brigade_field(card_details)
+                # add custom tags
+                card_details["tags"] = self._add_tags(card_name, card_details)
                 result[card_name] = card_details
             else:
                 print(
@@ -118,6 +120,14 @@ class Decklist:
                 )
 
         return result
+
+    def _add_tags(self, card_name: str, card_details: dict) -> dict:
+        """Add some tags to the card."""
+        output = {}
+        if card_name in EMPERORS:
+            output["is_emperor"] = True
+
+        return output
 
     def _normalize_brigade_field(self, card_details: dict) -> list:
         """Turn the brigades field into a list, handle good and evil gold."""

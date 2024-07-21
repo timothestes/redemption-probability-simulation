@@ -1,5 +1,4 @@
-"""The module for the spectrograph tool that will tell you how many cards an opposing Matthew
-will draw on average for a given deck file.
+"""PENDING
 """
 
 import argparse
@@ -10,9 +9,7 @@ from src.utils import float_between_0_and_1
 
 def parse_args():
     """Parse command-line arguments."""
-    parser = argparse.ArgumentParser(
-        description="Run an analysis on a deck of Redemption cards to find out number of cards an opposing Matthew might draw."
-    )
+    parser = argparse.ArgumentParser(description="PENDING")
     parser.add_argument(
         "--n_simulations", type=int, default=50, help="Number of simulations to run."
     )
@@ -24,7 +21,7 @@ def parse_args():
     parser.add_argument(
         "--cycler_logic",
         default="random",
-        help="If flag specified, controls the behavior of the cylcer souls. Setting to underdeck_colors will attempt to underdeck the cards in your hand that have the most colors. Also 'improves' choosing logic for Prosperity and Virgin Birth.",
+        help="If flag specified, controls the behavior of the cylcer souls.",
     )
     parser.add_argument(
         "--crowds_ineffectiveness_weight",
@@ -56,5 +53,5 @@ if __name__ == "__main__":
         matthew_fizzle_rate=args.matthew_fizzle_rate,
     )
     simulation.initialize_decklist()
-    simulation.run(only_matthew_results=True)
+    simulation.run()
     simulation.print_results()

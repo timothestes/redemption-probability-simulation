@@ -6,6 +6,8 @@ such as determining the required number of Lost Souls cards based on the deck si
 These functions support various aspects of the simulation and data processing tasks.
 """
 
+import argparse
+
 
 def determine_lost_souls_required(deck_size: int):
     """Determine the number of Lost Souls required based on the deck size."""
@@ -27,3 +29,11 @@ def determine_lost_souls_required(deck_size: int):
         return 14
     else:
         raise ValueError("Deck size out of range for Lost Souls calculation")
+
+
+def float_between_0_and_1(value):
+    value = float(value)
+    if 0.0 <= value <= 1.0:
+        return value
+    else:
+        raise argparse.ArgumentTypeError(f"{value} is not between 0 and 1")

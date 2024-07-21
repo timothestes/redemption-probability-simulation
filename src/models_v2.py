@@ -19,6 +19,7 @@ class Card:
         self.type = type
         self.brigade = brigade
         self.alignment = alignment
+        self.tags: dict = kwargs.get("tags", {})
         # self.__dict__.update(kwargs)  # Update instance with any additional kwargs
 
     def __str__(self):
@@ -44,6 +45,14 @@ class Zone:
             self.cards.extend(cards)
         else:
             self.cards.append(cards)
+
+    def _search_for_brigades(self, brigades: list[str]) -> bool:
+        """Search a given zone for any of the brigades."""
+        for card in self.cards:
+            if any(brigade in brigades for brigade in card.brigade):
+                return True
+
+        return False
 
     def count(
         self,
@@ -104,12 +113,7 @@ class Zone:
                 return card
         return None
 
-    def search_for(
-        self,
-        name: Optional[str] = None,
-        type: Optional[str] = None,
-        top_n: int = None,
-    ) -> Optional[Card]:
+    def search_for(self, **kwargs) -> Optional[Card]:
         """
         Search for and remove a card of the given name or type from the top N cards of the zone.
         At least one of name or type must be provided.
@@ -118,20 +122,28 @@ class Zone:
         Args:
         name (str, optional): The name of card to search for. Defaults to None.
         type (str, optional): The type of card to search for. Defaults to None.
+        tags (str, optional): The name of a tag field to search for. Defaults to None.
         top_n (int, optional): The number of cards from the start of the zone to search through.
 
         Returns:
         Optional[Card]: The found card, or None if not found.
         """
         # Ensure at least one of name or type is provided
-        if not name and not type:
-            raise ValueError("At least one of name or type must be provided.")
-        if name and type:
-            raise ValueError("Please provide only one input: name OR type.")
+        name: str = kwargs.get("name")
+        type: str = kwargs.get("type")
+        tags: str = kwargs.get("tags")
+        top_n: int = kwargs.get("top_n")
+
+        if not name and not type and not tags:
+            raise ValueError("At least one of name, type, or tag must be provided.")
 
         cards_to_search = self.cards if top_n is None else self.cards[:top_n]
         for card in cards_to_search:
-            if (name and card.name == name) or (type and card.type == type):
+            if (
+                (name and card.name == name)
+                or (type and card.type == type)
+                or (tags and tags in card.tags)
+            ):
                 self.cards.remove(card)
                 return card
         return None

@@ -39,3 +39,21 @@ DARKNESS = [
     'Lost Soul "Darkness" [Job 30:26]',
     'Lost Soul "Darkness" [Job 30:26] [2019 - 1st Place]',
 ]
+EMPERORS = [
+    "Emperor Augustus (Ap)",
+    "Emperor Augustus (Promo)",
+    "Emperor Augustus (Roots)",
+    "Emperor Domitian (RoJ AB)",
+    "Emperor Domitian (RoJ)",
+    "Emperor Galba",
+    "Emperor Nero",
+    "Emperor Nero (Promo)",
+    "Emperor Otho",
+    "Emperor Otho (Roots)",
+    "Emperor Tiberius (Ap)",
+    "Emperor Tiberius (J)",
+    "Emperor Vitellius",
+    "Emperor Vitellius (Roots)",
+    "Emperor Claudius",
+    "Emperor Claudius (PC)",
+]
