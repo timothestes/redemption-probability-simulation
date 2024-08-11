@@ -184,6 +184,8 @@ class Deck(Zone):
     def load_decklist(decklist: Decklist) -> "Deck":
         cards = []
         for card_metadata in decklist.mapped_main_deck_list.values():
+            if "alignment" not in card_metadata:
+                card_metadata["alignment"] = ""
             for i in range(int(card_metadata["quantity"])):
                 cards.append(Card(**card_metadata))
         return Deck(cards)

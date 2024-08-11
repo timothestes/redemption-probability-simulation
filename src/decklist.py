@@ -9,6 +9,7 @@ class Decklist:
         # TODO change this to an ENV variable
         self.card_data_path = (
             "/Applications/LackeyCCG/plugins/Redemption/sets/carddata.txt"
+            # "/Applications/LackeyCCG/plugins/Redemption Copy/sets/carddata.txt"
         )
         self.deck_file_path = deck_file_path
         self.main_deck_list = []
@@ -18,8 +19,8 @@ class Decklist:
         self.card_data = self._load_card_data()
         self.mapped_main_deck_list = self._map_card_metadata(self.main_deck_list)
         self.mapped_reserve_list = self._map_card_metadata(self.reserve_list)
-        self._save_json("tbd2.json", self.mapped_reserve_list)
-        self._save_json("tbd1.json", self.mapped_main_deck_list)
+        self._save_json("tbd_reserve_list.json", self.mapped_reserve_list)
+        self._save_json("tbd_main_deck_list.json", self.mapped_main_deck_list)
         self.deck_size = self._get_size_of(self.mapped_main_deck_list)
         self.reserve_size = self._get_size_of(self.mapped_reserve_list)
         if self.deck_size < 50:
@@ -103,7 +104,7 @@ class Decklist:
         """
         result = {}
         for card in card_list:
-            card_name = card["name"]
+            card_name = card["name"].replace('""', '"').strip('"')
             quantity = card["quantity"]
             if card_name in self.card_data:
                 # Copy the card data to avoid mutating the original data.
@@ -226,6 +227,9 @@ class Decklist:
                     brigades_list = replace_gold(brigades_list, "Good Gold")
                 else:
                     brigades_list = replace_gold(brigades_list, "Evil Gold")
+            # if no alignment, assume good gold
+            elif not alignment:
+                brigades_list = replace_gold(brigades_list, "Good Gold")
 
         # Add assertions
         allowed_brigades = set(
