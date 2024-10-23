@@ -36,7 +36,7 @@ class SpectrographSimulation:
             "cards_in_hand",
             "denarius_draw",
             "four_drachman_draw",
-            "whiff_on_heroes",
+            "angel_appears_used",
         ]
 
         with open(MATTHEW_CSV_FILE, "w", newline="", encoding="utf-8") as f:
@@ -234,6 +234,7 @@ class SpectrographSimulation:
         ):
             self.discard.add(self.hand.remove(name="Delivered"))
             self._play_denarius(denarius_from_deck=True)
+        self.territory_class_for_turn = True
 
     def _take_solitaire_turn(self) -> dict:
         """Take a turn, trying to 'combo' off"""
@@ -243,7 +244,7 @@ class SpectrographSimulation:
             "cards_in_hand": None,
             "denarius_draw": False,
             "four_drachman_draw": False,
-            "whiff_on_heroes": False,
+            "angel_appears_used": False,
         }
 
         def check_and_play():
@@ -280,7 +281,17 @@ class SpectrographSimulation:
 
         # Check for 0 heroes
         if self.hand.count(type="Hero") == 0 and self.territory.count(type="Hero") == 0:
-            self.output["whiff_on_heroes"] = True
+            self.output["angel_appears_used"] = False
+        else:
+            if (
+                self.hand.count(name="Angelic Guidance (I)") > 0
+                and not self.territory_class_for_turn
+                and (
+                    self.hand._search_for_brigades(brigades=["Silver"])
+                    or self.territory._search_for_brigades(brigades=["Silver"])
+                )
+            ):
+                self.output["angel_appears_used"] = True
 
         return self.output
 
@@ -352,7 +363,7 @@ class SpectrographSimulation:
                     four_drachma_count += (
                         1 if row["four_drachman_draw"] == "True" else 0
                     )
-                    whiff_count += 1 if row["whiff_on_heroes"] == "True" else 0
+                    whiff_count += 1 if row["angel_appears_used"] == "True" else 0
                     total_rows += 1
                 except (ValueError, KeyError) as e:
                     print(e)
@@ -367,6 +378,6 @@ class SpectrographSimulation:
             print(f"Average number of cards Matthew drew: {average_matthew_drew:.2f}")
             print(f"Percentage of Denarius draws: {denarius_percentage:.2f}%")
             print(f"Percentage of Four-Drachma draws: {four_drachma_percentage:.2f}%")
-            print(f"Percentage of whiffs on heroes: {whiff_percentage:.2f}%")
+            print(f"Percentage of angel_appears_used: {whiff_percentage:.2f}%")
         else:
             print("No valid data found")

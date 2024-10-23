@@ -49,8 +49,10 @@ class Zone:
     def _search_for_brigades(self, brigades: list[str]) -> bool:
         """Search a given zone for any of the brigades."""
         for card in self.cards:
-            if any(brigade in brigades for brigade in card.brigade):
-                return True
+            if "Hero" in card.type or "Evil Character" in card.type:
+                for brigade in brigades:
+                    if brigade in card.brigade:
+                        return True
 
         return False
 
